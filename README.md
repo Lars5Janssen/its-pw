@@ -6,7 +6,7 @@ Creds are stored in Yaml file as sha256 hash
 ```bash
 go run main.go
 ```
-Port 8080
+Port 8080 on localhost
 
 # TODO
 - [ ] Limit Connections to 1 at a time, because i am to lazy to do inter proc com
