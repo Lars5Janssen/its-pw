@@ -19,7 +19,6 @@ func main() {
 	http.HandleFunc("/welcome", WelcomePage)
 	http.HandleFunc("/signup", SignUp)
 
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	fmt.Println("Server started")
 	http.ListenAndServe(":8080", nil)
 
