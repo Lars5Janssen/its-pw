@@ -22,8 +22,6 @@ func main() {
 	http.HandleFunc("/app/welcome", WelcomePage)
 	http.HandleFunc("/app/signup", SignUp)
 
-	AddUser("a", "a")
-
 	fmt.Println("Server started")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 
