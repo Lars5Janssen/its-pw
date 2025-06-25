@@ -18,6 +18,10 @@ func main() {
 	http.HandleFunc("/login", LoginPage)
 	http.HandleFunc("/welcome", WelcomePage)
 	http.HandleFunc("/signup", SignUp)
+	http.HandleFunc("/app/", LoginPage)
+	http.HandleFunc("/app/login", LoginPage)
+	http.HandleFunc("/app/welcome", WelcomePage)
+	http.HandleFunc("/app/signup", SignUp)
 
 	fmt.Println("Server started")
 	http.ListenAndServe(":8080", nil)
