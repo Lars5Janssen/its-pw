@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/pquerna/otp"
+	"github.com/pquerna/otp/totp"
 	"gopkg.in/yaml.v3"
 )
 
@@ -37,6 +39,23 @@ var sessions = map[string]session{}
 
 func (s session) isExpired() bool {
 	return s.expiry.Before(time.Now())
+}
+
+var totpmap = map[string]string{}
+
+func generateTOTP(username string) {
+	key, keyErr := totp.Generate(totp.GenerateOpts{
+		Issuer:      "localhost",
+		AccountName: username,
+		SecretSize:  20,
+	})
+
+	if keyErr != nil {
+		log.Fatal("Something has gone wrong during otp generation")
+	}
+
+	totpmap[username] = key.Secret()
+	fmt.Println(key.Secret())
 }
 
 func WelcomePage(w http.ResponseWriter, r *http.Request) {
@@ -114,6 +133,19 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func writeYAML(path string, content interface{}) {
+	f, os_err := os.Create(path)
+	defer f.Close()
+	check(os_err)
+	new_content, cred_err := yaml.Marshal(&content)
+	check(cred_err)
+	writer := bufio.NewWriter(f)
+	_, w_err := writer.WriteString(string(new_content))
+	check(w_err)
+	writer.Flush()
+
+}
+
 func AddUser(username string, password string) {
 	config := readYaml("config.yaml")
 	credentials_file, exists_file := config["credentials_file"]
@@ -141,6 +173,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		password := r.FormValue("password")
 
 		AddUser(username, password)
+		generateTOTP(username)
 
 		fmt.Printf("New Login for %s registered\n", username)
 
