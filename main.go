@@ -96,8 +96,9 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		username := r.FormValue("username")
 		password := r.FormValue("password")
+		totpCode := r.FormValue("totp")
 
-		result := checkLogin(username, password)
+		result := checkLogin(username, password, totpCode)
 		if !result {
 			fmt.Printf("Invalid credentials entered\n")
 			fmt.Fprintf(w, "Invalid credentials")
@@ -193,7 +194,7 @@ func hashMe(toHash string) string {
 	return string(h.Sum(nil))
 }
 
-func checkLogin(username string, password string) bool {
+func checkLogin(username string, password string, totpCode string) bool {
 
 	creds := readCreds("config.yaml")
 
@@ -201,7 +202,14 @@ func checkLogin(username string, password string) bool {
 	if !user_exists {
 		return false
 	}
-	if found_password == hashMe(password) {
+	if found_password != hashMe(password) {
+		return false
+	}
+	userSecret, exists := totpmap[username]
+	if !exists {
+		return false
+	}
+	if totp.Validate(totpCode, userSecret) {
 		return true
 	}
 	return false
