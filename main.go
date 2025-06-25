@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
 	"gopkg.in/yaml.v3"
 )
