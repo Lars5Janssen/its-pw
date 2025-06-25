@@ -14,10 +14,6 @@ import (
 )
 
 func main() {
-	http.HandleFunc("/", LoginPage)
-	http.HandleFunc("/login", LoginPage)
-	http.HandleFunc("/welcome", WelcomePage)
-	http.HandleFunc("/signup", SignUp)
 	http.HandleFunc("/app/", LoginPage)
 	http.HandleFunc("/app/login", LoginPage)
 	http.HandleFunc("/app/welcome", WelcomePage)
@@ -40,7 +36,7 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 		result := checkLogin(username, password)
 		if result {
 			fmt.Printf("User %s logged in\n", username)
-			http.Redirect(w, r, "/welcome", http.StatusSeeOther)
+			http.Redirect(w, r, "/app/welcome", http.StatusSeeOther)
 			return
 		}
 		fmt.Printf("Invalid credentials entered\n")
@@ -82,7 +78,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Printf("New Login for %s registered\n", username)
 
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Redirect(w, r, "/app/login", http.StatusSeeOther)
 
 		return
 	}
