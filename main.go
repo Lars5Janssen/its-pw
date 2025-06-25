@@ -19,6 +19,11 @@ func main() {
 	http.HandleFunc("/app/welcome", WelcomePage)
 	http.HandleFunc("/app/signup", SignUp)
 
+	// http.HandleFunc("/", LoginPage)
+	// http.HandleFunc("/login", LoginPage)
+	// http.HandleFunc("/welcome", WelcomePage)
+	// http.HandleFunc("/signup", SignUp)
+
 	fmt.Println("Server started")
 	http.ListenAndServe(":8080", nil)
 
@@ -37,6 +42,7 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 		if result {
 			fmt.Printf("User %s logged in\n", username)
 			http.Redirect(w, r, "/app/welcome", http.StatusSeeOther)
+			// http.Redirect(w, r, "/welcome", http.StatusSeeOther)
 			return
 		}
 		fmt.Printf("Invalid credentials entered\n")
@@ -79,6 +85,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("New Login for %s registered\n", username)
 
 		http.Redirect(w, r, "/app/login", http.StatusSeeOther)
+		// http.Redirect(w, r, "/login", http.StatusSeeOther)
 
 		return
 	}
