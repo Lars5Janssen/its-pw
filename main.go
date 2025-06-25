@@ -9,7 +9,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/google/uuid"
 	"gopkg.in/yaml.v3"
 )
 
@@ -19,18 +21,57 @@ func main() {
 	http.HandleFunc("/app/welcome", WelcomePage)
 	http.HandleFunc("/app/signup", SignUp)
 
-	// http.HandleFunc("/", LoginPage)
-	// http.HandleFunc("/login", LoginPage)
-	// http.HandleFunc("/welcome", WelcomePage)
-	// http.HandleFunc("/signup", SignUp)
+	AddUser("a", "a")
 
 	fmt.Println("Server started")
-	http.ListenAndServe(":8080", nil)
+	log.Fatal(http.ListenAndServe(":8080", nil))
 
 }
 
+type session struct {
+	username string
+	expiry   time.Time
+}
+
+var sessions = map[string]session{}
+
+func (s session) isExpired() bool {
+	return s.expiry.Before(time.Now())
+}
+
 func WelcomePage(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Welcome, you are logged in!")
+	vaild, status, sessionToken := checkSessionToken(w, r)
+	if !vaild {
+		http.Redirect(w, r, "/app/login", status)
+		return
+	}
+	userString := fmt.Sprintf("Welcome, %s\nyou are logged in!", sessionToken.username)
+	fmt.Fprint(w, userString)
+}
+func checkSessionToken(w http.ResponseWriter, r *http.Request) (bool, int, session) {
+	c, err := r.Cookie("session_token")
+	if err != nil {
+		if err == http.ErrNoCookie {
+			w.WriteHeader(http.StatusUnauthorized)
+			return false, http.StatusUnauthorized, session{}
+		}
+
+		w.WriteHeader(http.StatusBadRequest)
+		return false, http.StatusBadRequest, session{}
+	}
+	sessionToken := c.Value
+	userSession, exists := sessions[sessionToken]
+	if !exists {
+		w.WriteHeader(http.StatusUnauthorized)
+		return false, http.StatusUnauthorized, session{}
+	}
+	if userSession.isExpired() {
+		delete(sessions, sessionToken)
+		w.WriteHeader(http.StatusUnauthorized)
+		return false, http.StatusUnauthorized, session{}
+	}
+
+	return true, http.StatusOK, userSession
 }
 
 func LoginPage(w http.ResponseWriter, r *http.Request) {
@@ -39,14 +80,28 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 		password := r.FormValue("password")
 
 		result := checkLogin(username, password)
-		if result {
-			fmt.Printf("User %s logged in\n", username)
-			http.Redirect(w, r, "/app/welcome", http.StatusSeeOther)
-			// http.Redirect(w, r, "/welcome", http.StatusSeeOther)
+		if !result {
+			fmt.Printf("Invalid credentials entered\n")
+			fmt.Fprintf(w, "Invalid credentials")
 			return
 		}
-		fmt.Printf("Invalid credentials entered\n")
-		fmt.Fprintf(w, "Invalid credentials")
+
+		sessionToken := uuid.NewString()
+		expiresAt := time.Now().Add(120 * time.Second)
+
+		sessions[sessionToken] = session{
+			username: username,
+			expiry:   expiresAt,
+		}
+
+		http.SetCookie(w, &http.Cookie{
+			Name:    "session_token",
+			Value:   sessionToken,
+			Expires: expiresAt,
+		})
+
+		fmt.Printf("User %s logged in\n", username)
+		http.Redirect(w, r, "/app/welcome", http.StatusSeeOther)
 		return
 	}
 
@@ -59,34 +114,37 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func AddUser(username string, password string) {
+	config := readYaml("config.yaml")
+	credentials_file, exists_file := config["credentials_file"]
+	if !exists_file {
+		log.Fatal("cred file not found?")
+	}
+	cred_path := credentials_file
+	f, os_err := os.Create(cred_path)
+	check(os_err)
+	creds := readCreds("config.yaml")
+	creds[username] = hashMe(password)
+	new_creds, cred_err := yaml.Marshal(&creds)
+	check(cred_err)
+	defer f.Close()
+	writer := bufio.NewWriter(f)
+	_, w_err := writer.WriteString(string(new_creds))
+	check(w_err)
+	writer.Flush()
+
+}
+
 func SignUp(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		username := r.FormValue("username")
 		password := r.FormValue("password")
 
-		config := readYaml("config.yaml")
-		credentials_file, exists_file := config["credentials_file"]
-		if !exists_file {
-			log.Fatal("cred file not found?")
-		}
-		cred_path := credentials_file
-		f, os_err := os.Create(cred_path)
-		check(os_err)
-		creds := readCreds("config.yaml")
-		creds[username] = hashMe(password)
-		new_creds, cred_err := yaml.Marshal(&creds)
-		check(cred_err)
-		defer f.Close()
-		writer := bufio.NewWriter(f)
-		_, w_err := writer.WriteString(string(new_creds))
-		check(w_err)
-		writer.Flush()
+		AddUser(username, password)
 
 		fmt.Printf("New Login for %s registered\n", username)
 
 		http.Redirect(w, r, "/app/login", http.StatusSeeOther)
-		// http.Redirect(w, r, "/login", http.StatusSeeOther)
-
 		return
 	}
 }
