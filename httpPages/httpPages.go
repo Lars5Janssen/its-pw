@@ -44,8 +44,8 @@ func InitPasskeys(logger log.Logger) {
 		RPID:          "localhost",
 		RPOrigins: []string{
 			"https://crisp-kangaroo-modern.ngrok-free.app",
-			"localhost",
-			"localhost:8080",
+			// "localhost",
+			// "localhost:8080",
 		},
 	}
 
