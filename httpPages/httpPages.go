@@ -1,14 +1,18 @@
 package pages
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 	"time"
 
+	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/google/uuid"
 
 	"github.com/Lars5Janssen/its-pw/login"
+	"github.com/Lars5Janssen/its-pw/passkey"
 )
 
 func WelcomePage(w http.ResponseWriter, r *http.Request) {
@@ -21,6 +25,122 @@ func WelcomePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Login Page was accsessed with valid Token")
 	userString := fmt.Sprintf("Welcome, %s\nyou are logged in!", username)
 	fmt.Fprint(w, userString)
+}
+
+var (
+	webAuthn  *webauthn.WebAuthn
+	err       error
+	datastore passkey.PasskeyStore
+	l         log.Logger
+)
+
+func InitPasskeys(logger log.Logger) {
+	l = logger
+	datastore = passkey.NewInMem(l)
+	wconfig := &webauthn.Config{
+		RPDisplayName: "ITS123",
+		RPID:          "localhost",
+		RPOrigins: []string{
+			"https://crisp-kangaroo-modern.ngrok-free.app",
+			"localhost",
+			"localhost:8080",
+		},
+	}
+
+	if webAuthn, err = webauthn.New(wconfig); err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func BeginRegistration(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("BeginRegistration\n")
+
+	username, err := getUsername(r)
+	if err != nil {
+		log.Fatalf("Could not get username: %s\n", err.Error())
+	}
+
+	user := datastore.GetOrCreateUser(username)
+	options, session, err := webAuthn.BeginRegistration(user)
+	if err != nil {
+		msg := fmt.Sprintf("can't begin registration: %s", err.Error())
+		l.Printf("ERROR %s", msg)
+		JSONResponse(w, msg, http.StatusBadRequest)
+		return
+	}
+
+	t, err := datastore.GenSessionID()
+	if err != nil {
+		l.Printf("ERROR can't gen session id: %s", err.Error())
+		panic(err)
+	}
+
+	datastore.SaveSession(t, *session)
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "sid",
+		Value:    t,
+		Path:     "/app/beginRegistration",
+		MaxAge:   3600,
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
+
+	JSONResponse(w, options, http.StatusOK)
+
+}
+
+func EndRegistration(w http.ResponseWriter, r *http.Request) {
+	sid, err := r.Cookie("sid")
+	if err != nil {
+		l.Printf("ERROR cant get sid: %s", err.Error())
+		panic(err)
+	}
+
+	session, _ := datastore.GetSession(sid.Value)
+	user := datastore.GetOrCreateUser(string(session.UserID))
+
+	credential, err := webAuthn.FinishRegistration(user, session, r)
+	if err != nil {
+		msg := fmt.Sprintf("can't finish registration: %s", err.Error())
+		l.Printf("ERROR: %s", msg)
+		http.SetCookie(w, &http.Cookie{
+			Name:  "sid",
+			Value: "",
+		})
+		JSONResponse(w, msg, http.StatusBadRequest)
+		return
+	}
+	user.AddCredential(credential)
+	datastore.SaveUser(user)
+	datastore.DeleteSession(sid.Value)
+	http.SetCookie(w, &http.Cookie{
+		Name:  "sid",
+		Value: "",
+	})
+
+	l.Printf("INFO passkey reg finished")
+	JSONResponse(w, "Reg Succsess", http.StatusOK)
+}
+
+func JSONResponse(w http.ResponseWriter, data interface{}, status int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(data)
+}
+
+// getUsername is a helper function to extract the username from json request
+func getUsername(r *http.Request) (string, error) {
+	type Username struct {
+		Username string `json:"username"`
+	}
+	var u Username
+	if err := json.NewDecoder(r.Body).Decode(&u); err != nil {
+		return "", err
+	}
+
+	return u.Username, nil
 }
 
 func SignUp(w http.ResponseWriter, r *http.Request) {
@@ -74,7 +194,11 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println("LoginPage was accsessed")
 
-	tmpl, err := template.ParseFiles("templates/landing.html")
+	tmpl, err := template.ParseFiles(
+		"templates/landing.html",
+		"templates/script.js",
+		"templates/index.es5.umd.min.js",
+	)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

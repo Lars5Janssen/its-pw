@@ -8,11 +8,12 @@ function showMessage(message, isError = false) {
 }
 
 async function register() {
+    console.log("JEs");
     const username = document.getElementById('pk-username').value;
 
     try {
         // Get Registration options and Challenge from Server
-        const response = await fetch('TODO DEFINE ENDPOINT REGISTER START', {
+        const response = await fetch('/app/beginRegistration', {
             method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({username: username})
         });
@@ -25,7 +26,7 @@ async function register() {
         const options = await response.json();
         const attestationResponse = await SimpleWebAuthnBrowser.startRegistrtion(options.publicKey);
 
-        const verificationResponse = await fetch('TODO DEFINE ENDPOINT REGISTER FINISH', {
+        const verificationResponse = await fetch('/app/endRegistration', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
