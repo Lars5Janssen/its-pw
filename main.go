@@ -11,6 +11,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/Lars5Janssen/its-pw/httpPages"
 	"github.com/google/uuid"
 	"github.com/pquerna/otp/totp"
 	"gopkg.in/yaml.v3"
@@ -55,15 +56,6 @@ func generateTOTP(username string) {
 	fmt.Println(key.Secret())
 }
 
-func WelcomePage(w http.ResponseWriter, r *http.Request) {
-	vaild, status, sessionToken := checkSessionToken(w, r)
-	if !vaild {
-		http.Redirect(w, r, "/app/login", status)
-		return
-	}
-	userString := fmt.Sprintf("Welcome, %s\nyou are logged in!", sessionToken.username)
-	fmt.Fprint(w, userString)
-}
 func checkSessionToken(w http.ResponseWriter, r *http.Request) (bool, int, session) {
 	c, err := r.Cookie("session_token")
 	if err != nil {
@@ -88,47 +80,6 @@ func checkSessionToken(w http.ResponseWriter, r *http.Request) (bool, int, sessi
 	}
 
 	return true, http.StatusOK, userSession
-}
-
-func LoginPage(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		username := r.FormValue("username")
-		password := r.FormValue("password")
-		totpCode := r.FormValue("totp")
-
-		result := checkLogin(username, password, totpCode)
-		if !result {
-			fmt.Printf("Invalid credentials entered\n")
-			fmt.Fprintf(w, "Invalid credentials")
-			return
-		}
-
-		sessionToken := uuid.NewString()
-		expiresAt := time.Now().Add(120 * time.Second)
-
-		sessions[sessionToken] = session{
-			username: username,
-			expiry:   expiresAt,
-		}
-
-		http.SetCookie(w, &http.Cookie{
-			Name:    "session_token",
-			Value:   sessionToken,
-			Expires: expiresAt,
-		})
-
-		fmt.Printf("User %s logged in\n", username)
-		http.Redirect(w, r, "/app/welcome", http.StatusSeeOther)
-		return
-	}
-
-	tmpl, err := template.ParseFiles("templates/landing.html")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	tmpl.Execute(w, nil)
-
 }
 
 func writeYAML(path string, content interface{}) {
@@ -163,21 +114,6 @@ func AddUser(username string, password string) {
 	check(w_err)
 	writer.Flush()
 
-}
-
-func SignUp(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		username := r.FormValue("username")
-		password := r.FormValue("password")
-
-		AddUser(username, password)
-		generateTOTP(username)
-
-		fmt.Printf("New Login for %s registered\n", username)
-
-		http.Redirect(w, r, "/app/login", http.StatusSeeOther)
-		return
-	}
 }
 
 func check(e error) {
