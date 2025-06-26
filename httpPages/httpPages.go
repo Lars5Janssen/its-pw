@@ -53,7 +53,6 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 		expiresAt := time.Now().Add(120 * time.Second)
 
 		login.AddSession(sessionToken, username, expiresAt)
-
 		http.SetCookie(w, &http.Cookie{
 			Name:    "session_token",
 			Value:   sessionToken,
@@ -71,5 +70,4 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tmpl.Execute(w, nil)
-
 }
