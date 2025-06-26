@@ -1,4 +1,9 @@
-package httppages
+package pages
+
+import (
+	"fmt"
+	"net/http"
+)
 
 func WelcomePage(w http.ResponseWriter, r *http.Request) {
 	vaild, status, sessionToken := checkSessionToken(w, r)

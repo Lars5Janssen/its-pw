@@ -11,10 +11,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/Lars5Janssen/its-pw/httpPages"
 	"github.com/google/uuid"
 	"github.com/pquerna/otp/totp"
 	"gopkg.in/yaml.v3"
+
+	"github.com/Lars5Janssen/its-pw/httpPages"
 )
 
 func main() {
