@@ -2,6 +2,7 @@ package pages
 
 import (
 	"fmt"
+	"html/template"
 	"net/http"
 )
 
