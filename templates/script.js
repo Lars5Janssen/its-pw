@@ -8,7 +8,6 @@ function showMessage(message, isError = false) {
 }
 
 async function register() {
-    console.log("JEs");
     const username = document.getElementById('pk-username').value;
 
     try {
@@ -24,7 +23,9 @@ async function register() {
         }
 
         const options = await response.json();
+        console.log(options)
         const attestationResponse = await SimpleWebAuthnBrowser.startRegistration(options.publicKey);
+        console.log(attestationResponse)
 
         const verificationResponse = await fetch('/app/endRegistration', {
             method: 'POST',

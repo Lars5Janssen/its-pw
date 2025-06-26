@@ -30,10 +30,11 @@ func WelcomePage(w http.ResponseWriter, r *http.Request) {
 }
 
 var (
-	webAuthn  *webauthn.WebAuthn
-	err       error
-	datastore passkey.PasskeyStore
-	l         log.Logger
+	webAuthn       *webauthn.WebAuthn
+	err            error
+	datastore      passkey.PasskeyStore
+	l              log.Logger
+	SessionUserMap map[string]string
 )
 
 func InitPasskeys(logger log.Logger) {
@@ -80,7 +81,13 @@ func BeginRegistration(w http.ResponseWriter, r *http.Request) {
 	}
 
 	datastore.SaveSession(t, *session)
+	SessionUserMap[t] = username
 
+	fmt.Println(t)
+	fmt.Println(t)
+	fmt.Println(t)
+	fmt.Println(t)
+	fmt.Println(t)
 	http.SetCookie(w, &http.Cookie{
 		Name:     "sid",
 		Value:    t,
@@ -90,31 +97,42 @@ func BeginRegistration(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 	})
+	http.SetCookie(w, &http.Cookie{
+		Name:  "sidfix",
+		Value: t,
+	})
+	fmt.Println(t)
+	fmt.Println(t)
+	fmt.Println(t)
+	fmt.Println(t)
 
 	JSONResponse(w, options, http.StatusOK)
-	SessionUserMap[t] = username
 
 }
 
-var SessionUserMap = map[string]string{}
-
 func EndRegistration(w http.ResponseWriter, r *http.Request) {
 	l.Println("END Registration")
+	util.PrintMap(SessionUserMap)
 	sid, err := r.Cookie("sid")
 	if err != nil {
 		l.Printf("ERROR cant get sid: %s", err.Error())
 		panic(err)
 	}
-
-	session, _ := datastore.GetSession(sid.Value)
-	username, exists := SessionUserMap[string(session.UserID)]
-	if !exists {
-		return
+	sidfix, err := r.Cookie("sidfix")
+	if err != nil {
+		l.Printf("ERROR cant get sidfix: %s", err.Error())
+		panic(err)
 	}
-	println(username)
-	println(username)
-	println(username)
-	println(username)
+
+	session, _ := datastore.GetSession(sidfix.Value)
+	username, b := SessionUserMap[string(session.UserID)]
+	fmt.Println("sessionMap")
+	fmt.Println(b)
+	util.PrintMap(SessionUserMap)
+	fmt.Println("session")
+	fmt.Println(string(session.UserID))
+	fmt.Println("username")
+	fmt.Println(username)
 	user := datastore.GetOrCreateUser(username)
 
 	credential, err := webAuthn.FinishRegistration(user, session, r)

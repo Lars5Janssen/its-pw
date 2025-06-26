@@ -52,8 +52,10 @@ func NewInMem(log log.Logger) *InMem {
 }
 
 func (i *InMem) GetSession(token string) (webauthn.SessionData, bool) {
-	i.log.Printf("[DEBUG] GetSession: %v", i.sessions[token])
 	val, ok := i.sessions[token]
+	i.log.Printf("[DEBUG] GetSession: %v", token)
+	i.log.Printf("[DEBUG] GetSession: %v", ok)
+	i.log.Printf("[DEBUG] GetSession: %v", val)
 
 	return val, ok
 }
