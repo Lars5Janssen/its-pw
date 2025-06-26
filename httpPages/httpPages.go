@@ -12,12 +12,14 @@ import (
 )
 
 func WelcomePage(w http.ResponseWriter, r *http.Request) {
-	vaild, status, sessionToken := login.CheckSessionToken(w, r)
+	vaild, status, _, username := login.CheckSessionToken(w, r)
 	if !vaild {
+		fmt.Println("Login Page was accsessed with invalid Token")
 		http.Redirect(w, r, "/app/login", status)
 		return
 	}
-	userString := fmt.Sprintf("Welcome, %s\nyou are logged in!", sessionToken)
+	fmt.Println("Login Page was accsessed with valid Token")
+	userString := fmt.Sprintf("Welcome, %s\nyou are logged in!", username)
 	fmt.Fprint(w, userString)
 }
 
@@ -25,6 +27,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		username := r.FormValue("username")
 		password := r.FormValue("password")
+		fmt.Printf("SignUp Endpoint was accsessed for %s with pw:\"%s\"\n", username, password)
 
 		login.AddUser(username, password)
 		login.GenerateTOTP(username)
@@ -41,6 +44,12 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 		username := r.FormValue("username")
 		password := r.FormValue("password")
 		totpCode := r.FormValue("totp")
+		fmt.Printf(
+			"Login Endpoint was accsessed for %s with pw:\"%s\" and totp:%s\n",
+			username,
+			password,
+			totpCode,
+		)
 
 		result := login.CheckLogin(username, password, totpCode)
 		if !result {
@@ -63,6 +72,7 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/app/welcome", http.StatusSeeOther)
 		return
 	}
+	fmt.Println("LoginPage was accsessed")
 
 	tmpl, err := template.ParseFiles("templates/landing.html")
 	if err != nil {

@@ -8,6 +8,7 @@ import (
 
 	"github.com/Lars5Janssen/its-pw/files"
 	"github.com/Lars5Janssen/its-pw/httpPages"
+	"github.com/Lars5Janssen/its-pw/login"
 )
 
 func main() {
@@ -19,6 +20,7 @@ func main() {
 	if _, err := os.Stat("creds.yaml"); err != nil {
 		files.WriteYAML("cred.yaml", make(map[string]string))
 	}
+	login.AddDefaultUser()
 
 	fmt.Println("Server started")
 	log.Fatal(http.ListenAndServe(":8080", nil))

@@ -25,10 +25,12 @@ func (s Session) isExpired() bool {
 }
 
 func ReadCreds() map[string]string {
+	fmt.Println("Reading Credentials")
 	return files.ReadYaml("creds.yaml")
 }
 
 func WriteCreds(creds map[string]string) {
+	fmt.Println("Writing Credentials")
 	files.WriteYAML("creds.yaml", creds)
 }
 
@@ -66,9 +68,15 @@ func CheckLogin(username string, password string, totpCode string) bool {
 	return false
 }
 
+func AddDefaultUser() {
+	AddUser("default", "default")
+	totpmap["default"] = "QACZSSNENVAXRPMVJWCY2NL6RT34W2HP"
+}
+
 func AddUser(username string, password string) {
 	creds := ReadCreds()
 	creds[username] = hashMe(password)
+	WriteCreds(creds)
 }
 
 func GenerateTOTP(username string) {
@@ -86,28 +94,28 @@ func GenerateTOTP(username string) {
 	fmt.Println(key.Secret())
 }
 
-func CheckSessionToken(w http.ResponseWriter, r *http.Request) (bool, int, Session) {
+func CheckSessionToken(w http.ResponseWriter, r *http.Request) (bool, int, Session, string) {
 	c, err := r.Cookie("session_token")
 	if err != nil {
 		if err == http.ErrNoCookie {
 			w.WriteHeader(http.StatusUnauthorized)
-			return false, http.StatusUnauthorized, Session{}
+			return false, http.StatusUnauthorized, Session{}, ""
 		}
 
 		w.WriteHeader(http.StatusBadRequest)
-		return false, http.StatusBadRequest, Session{}
+		return false, http.StatusBadRequest, Session{}, ""
 	}
 	sessionToken := c.Value
 	userSession, exists := sessions[sessionToken]
 	if !exists {
 		w.WriteHeader(http.StatusUnauthorized)
-		return false, http.StatusUnauthorized, Session{}
+		return false, http.StatusUnauthorized, Session{}, ""
 	}
 	if userSession.isExpired() {
 		delete(sessions, sessionToken)
 		w.WriteHeader(http.StatusUnauthorized)
-		return false, http.StatusUnauthorized, Session{}
+		return false, http.StatusUnauthorized, Session{}, ""
 	}
 
-	return true, http.StatusOK, userSession
+	return true, http.StatusOK, userSession, userSession.username
 }
