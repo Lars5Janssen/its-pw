@@ -1,3 +1,5 @@
+package httppages
+
 func WelcomePage(w http.ResponseWriter, r *http.Request) {
 	vaild, status, sessionToken := checkSessionToken(w, r)
 	if !vaild {
