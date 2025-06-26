@@ -41,11 +41,12 @@ func InitPasskeys(logger log.Logger) {
 	datastore = passkey.NewInMem(l)
 	wconfig := &webauthn.Config{
 		RPDisplayName: "ITS123",
-		RPID:          "localhost",
+		RPID:          "https://crisp-kangaroo-modern.ngrok-free.app",
+		// RPID:          "localhost",
 		RPOrigins: []string{
 			"https://crisp-kangaroo-modern.ngrok-free.app",
-			// "localhost",
-			// "localhost:8080",
+			"localhost",
+			"localhost:8080",
 		},
 	}
 
