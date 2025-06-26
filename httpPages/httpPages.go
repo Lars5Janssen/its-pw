@@ -37,12 +37,13 @@ var (
 )
 
 func InitPasskeys(logger log.Logger) {
+	SessionUserMap = make(map[string]string)
 	l = logger
 	datastore = passkey.NewInMem(l)
 	wconfig := &webauthn.Config{
 		RPDisplayName: "ITS123",
-		RPID:          "crisp-kangaroo-modern.ngrok-free.app",
-		// RPID:          "localhost",
+		// RPID:          "crisp-kangaroo-modern.ngrok-free.app",
+		RPID: "localhost",
 		RPOrigins: []string{
 			"https://crisp-kangaroo-modern.ngrok-free.app",
 			"localhost",
@@ -91,8 +92,11 @@ func BeginRegistration(w http.ResponseWriter, r *http.Request) {
 	})
 
 	JSONResponse(w, options, http.StatusOK)
+	SessionUserMap[t] = username
 
 }
+
+var SessionUserMap = map[string]string{}
 
 func EndRegistration(w http.ResponseWriter, r *http.Request) {
 	l.Println("END Registration")
@@ -103,7 +107,15 @@ func EndRegistration(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session, _ := datastore.GetSession(sid.Value)
-	user := datastore.GetOrCreateUser(string(session.UserID))
+	username, exists := SessionUserMap[string(session.UserID)]
+	if !exists {
+		return
+	}
+	println(username)
+	println(username)
+	println(username)
+	println(username)
+	user := datastore.GetOrCreateUser(username)
 
 	credential, err := webAuthn.FinishRegistration(user, session, r)
 	if err != nil {

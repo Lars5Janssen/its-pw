@@ -68,6 +68,13 @@ func (i *InMem) DeleteSession(token string) {
 	delete(i.sessions, token)
 }
 
+func (i *InMem) PrintAllUsers() {
+	i.log.Println("PRINT ALL USERS")
+	for k, v := range i.users {
+		i.log.Printf("k: %s, v: %s", k, v)
+	}
+}
+
 func (i *InMem) GetOrCreateUser(userName string) PasskeyUser {
 	i.log.Printf("[DEBUG] GetOrCreateUser: %v", userName)
 	if _, ok := i.users[userName]; !ok {
