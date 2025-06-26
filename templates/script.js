@@ -24,7 +24,7 @@ async function register() {
         }
 
         const options = await response.json();
-        const attestationResponse = await SimpleWebAuthnBrowser.startRegistrtion(options.publicKey);
+        const attestationResponse = await SimpleWebAuthnBrowser.startRegistration(options.publicKey);
 
         const verificationResponse = await fetch('/app/endRegistration', {
             method: 'POST',

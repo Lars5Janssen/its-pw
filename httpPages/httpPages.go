@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/go-webauthn/webauthn/webauthn"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/Lars5Janssen/its-pw/login"
 	"github.com/Lars5Janssen/its-pw/passkey"
+	"github.com/Lars5Janssen/its-pw/util"
 )
 
 func WelcomePage(w http.ResponseWriter, r *http.Request) {
@@ -92,6 +94,7 @@ func BeginRegistration(w http.ResponseWriter, r *http.Request) {
 }
 
 func EndRegistration(w http.ResponseWriter, r *http.Request) {
+	l.Println("END Registration")
 	sid, err := r.Cookie("sid")
 	if err != nil {
 		l.Printf("ERROR cant get sid: %s", err.Error())
@@ -194,14 +197,18 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println("LoginPage was accsessed")
 
-	tmpl, err := template.ParseFiles(
-		"templates/landing.html",
-		"templates/script.js",
-		"templates/index.es5.umd.min.js",
+	html, err := os.ReadFile("templates/landing.html")
+	util.Check(err)
+	tmpl, err := template.New("base").Parse(string(html))
+	util.Check(err)
+
+	script, err := os.ReadFile("templates/script.js")
+	util.Check(err)
+	otherscript, err := os.ReadFile("templates/index.es5.umd.min.js")
+	util.Check(err)
+	err = tmpl.ExecuteTemplate(
+		w,
+		"base",
+		template.JS(string(otherscript)+"\n"+string(script)),
 	)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	tmpl.Execute(w, nil)
 }
