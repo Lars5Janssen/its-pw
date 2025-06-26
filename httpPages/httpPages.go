@@ -4,15 +4,20 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"time"
+
+	"github.com/google/uuid"
+
+	"github.com/Lars5Janssen/its-pw/login"
 )
 
 func WelcomePage(w http.ResponseWriter, r *http.Request) {
-	vaild, status, sessionToken := checkSessionToken(w, r)
+	vaild, status, sessionToken := login.CheckSessionToken(w, r)
 	if !vaild {
 		http.Redirect(w, r, "/app/login", status)
 		return
 	}
-	userString := fmt.Sprintf("Welcome, %s\nyou are logged in!", sessionToken.username)
+	userString := fmt.Sprintf("Welcome, %s\nyou are logged in!", sessionToken)
 	fmt.Fprint(w, userString)
 }
 
@@ -21,8 +26,8 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		username := r.FormValue("username")
 		password := r.FormValue("password")
 
-		AddUser(username, password)
-		generateTOTP(username)
+		login.AddUser(username, password)
+		login.GenerateTOTP(username)
 
 		fmt.Printf("New Login for %s registered\n", username)
 
@@ -37,7 +42,7 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 		password := r.FormValue("password")
 		totpCode := r.FormValue("totp")
 
-		result := checkLogin(username, password, totpCode)
+		result := login.CheckLogin(username, password, totpCode)
 		if !result {
 			fmt.Printf("Invalid credentials entered\n")
 			fmt.Fprintf(w, "Invalid credentials")
@@ -47,10 +52,7 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 		sessionToken := uuid.NewString()
 		expiresAt := time.Now().Add(120 * time.Second)
 
-		sessions[sessionToken] = session{
-			username: username,
-			expiry:   expiresAt,
-		}
+		login.AddSession(sessionToken, username, expiresAt)
 
 		http.SetCookie(w, &http.Cookie{
 			Name:    "session_token",

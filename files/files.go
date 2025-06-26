@@ -1,31 +1,36 @@
 package files
 
-import "github.com/Lars5Janssen/its-pw/util"
+import (
+	"bufio"
+	"fmt"
+	"os"
 
-func writeYAML(path string, content interface{}) {
+	"gopkg.in/yaml.v3"
+
+	"github.com/Lars5Janssen/its-pw/util"
+)
+
+func WriteYAML(path string, content interface{}) {
 	f, os_err := os.Create(path)
 	defer f.Close()
-	check(os_err)
+	util.Check(os_err)
 	new_content, cred_err := yaml.Marshal(&content)
-	check(cred_err)
+	util.Check(cred_err)
 	writer := bufio.NewWriter(f)
 	_, w_err := writer.WriteString(string(new_content))
-	check(w_err)
+	util.Check(w_err)
 	writer.Flush()
 
 }
 
-func readYaml(path string) map[string]string {
-	file, err := ioutil.ReadFile(path)
-	check(err)
+func ReadYaml(path string) map[string]string {
+	file, err := os.ReadFile(path)
+	if err != nil {
+		fmt.Println("Error with reading yaml")
+		return make(map[string]string)
+	}
 	filemap := make(map[interface{}]interface{})
 	err2 := yaml.Unmarshal(file, &filemap)
-	check(err2)
-	finalmap := make(map[string]string)
-	for k, v := range filemap {
-		key := fmt.Sprintf("%s", k)
-		value := fmt.Sprintf("%s", v)
-		finalmap[key] = value
-	}
-	return finalmap
+	util.Check(err2)
+	return util.ItoSmap(filemap)
 }
