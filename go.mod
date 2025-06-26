@@ -1,4 +1,4 @@
-module webpage
+module github.com/Lars5Janssen/its-pw
 
 go 1.24.2
 
