@@ -32,6 +32,7 @@ func InitPasskeys(logger log.Logger, context context.Context, connection *pgx.Co
 		RPOrigins: []string{
 			"https://crisp-kangaroo-modern.ngrok-free.app",
 			"localhost",
+			"https://localhost",
 			"http://localhost:8080",
 			"http://localhost:8765",
 			"https://localhost:8080",
