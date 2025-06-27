@@ -37,8 +37,8 @@ func BeginLogin(w http.ResponseWriter, r *http.Request) {
 	repoUser, _ := repo.GetUserByName(ctx, username)
 	sessionData, _ := json.Marshal(session)
 	repo.CreateSession(ctx, repository.CreateSessionParams{
-		UserID: repoUser.ID,
-		SessionID: t,
+		UserID:      repoUser.ID,
+		SessionID:   t,
 		SessionData: sessionData,
 	})
 
@@ -90,9 +90,6 @@ func EndLogin(w http.ResponseWriter, r *http.Request) {
 	if credential.Authenticator.CloneWarning {
 		l.Println("WARNING can't finish login due to Clone Warining")
 	}
-
-
-
 
 	jsonCreds, _ := json.Marshal(credential)
 	user, _ := repo.GetUserByName(ctx, name.Value)

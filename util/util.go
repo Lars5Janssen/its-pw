@@ -6,12 +6,10 @@ import (
 )
 
 func PrintMap(m map[string]string) {
-
 	for k, v := range m {
 		fmt.Printf("k:%s,v:%s\n", k, v)
 	}
 }
-
 
 func ItoSmap(m map[interface{}]interface{}) map[string]string {
 	stringMap := map[string]string{}

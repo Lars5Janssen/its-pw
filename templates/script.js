@@ -12,7 +12,7 @@ async function proceed() {
     const current = window.location.href
     window.location.href = current + "/proceed";
     // fetch('/app/proceed', {
-        // method: 'POST'
+    // method: 'POST'
     // })
 }
 
@@ -21,8 +21,8 @@ async function login() {
 
     try {
         const response = await fetch('/app/beginLogin', {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({username: username})
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: username })
         });
         if (!response.ok) {
             const msg = await response.json();
@@ -59,8 +59,8 @@ async function register() {
     try {
         // Get Registration options and Challenge from Server
         const response = await fetch('/app/beginRegistration', {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({username: username})
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: username })
         });
 
         if (!response.ok) {
@@ -89,7 +89,7 @@ async function register() {
             showMessage(msg, true);
         }
     } catch
-        (error) {
+    (error) {
         showMessage('Error: ' + error.message, true);
     }
 }

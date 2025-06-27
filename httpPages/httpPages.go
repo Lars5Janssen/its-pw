@@ -62,15 +62,15 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 }
 
 func setLoginSessionToken(w http.ResponseWriter, username string) {
-		sessionToken := uuid.NewString()
-		expiresAt := time.Now().Add(120 * time.Second)
+	sessionToken := uuid.NewString()
+	expiresAt := time.Now().Add(120 * time.Second)
 
-		login.AddSession(sessionToken, username, expiresAt)
-		http.SetCookie(w, &http.Cookie{
-			Name:    "session_token",
-			Value:   sessionToken,
-			Expires: expiresAt,
-		})
+	login.AddSession(sessionToken, username, expiresAt)
+	http.SetCookie(w, &http.Cookie{
+		Name:    "session_token",
+		Value:   sessionToken,
+		Expires: expiresAt,
+	})
 }
 
 func LoginPage(w http.ResponseWriter, r *http.Request) {
