@@ -8,12 +8,6 @@ import (
 	"github.com/go-webauthn/webauthn/webauthn"
 )
 
-type PasskeyUser interface {
-	webauthn.User
-	AddCredential(*webauthn.Credential)
-	UpdateCredential(*webauthn.Credential)
-}
-
 type PasskeyStore interface {
 	GetOrCreateUser(userName string) PasskeyUser
 	SaveUser(PasskeyUser)

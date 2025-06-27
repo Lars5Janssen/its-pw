@@ -1,6 +1,7 @@
 package pages
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -11,7 +12,9 @@ import (
 
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 
+	"github.com/Lars5Janssen/its-pw/internal/repository"
 	"github.com/Lars5Janssen/its-pw/login"
 	"github.com/Lars5Janssen/its-pw/passkey"
 	"github.com/Lars5Janssen/its-pw/util"
@@ -30,15 +33,20 @@ func WelcomePage(w http.ResponseWriter, r *http.Request) {
 }
 
 var (
-	webAuthn       *webauthn.WebAuthn
-	err            error
-	datastore      passkey.PasskeyStore
-	l              log.Logger
-	SessionUserMap map[string]string
+	webAuthn  *webauthn.WebAuthn
+	err       error
+	datastore passkey.PasskeyStore
+	l         log.Logger
+
+	// DB
+	ctx  context.Context
+	conn *pgx.Conn
 )
 
-func InitPasskeys(logger log.Logger) {
-	SessionUserMap = make(map[string]string)
+func InitPasskeys(logger log.Logger, context context.Context, connection *pgx.Conn) {
+	ctx = context
+	conn = connection
+
 	l = logger
 	datastore = passkey.NewInMem(l)
 	wconfig := &webauthn.Config{
@@ -59,12 +67,16 @@ func InitPasskeys(logger log.Logger) {
 
 func BeginRegistration(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("BeginRegistration\n")
-
 	username, err := getUsername(r)
 	if err != nil {
 		log.Fatalf("Could not get username: %s\n", err.Error())
 	}
-
+	repo := repository.New(conn)
+	repo.CreateUser(ctx, repository.CreateUserParams{
+		ID:          []byte(uuid.NewString()),
+		Name:        username,
+		DisplayName: username,
+	})
 	user := datastore.GetOrCreateUser(username)
 	options, session, err := webAuthn.BeginRegistration(user)
 	if err != nil {
@@ -83,11 +95,6 @@ func BeginRegistration(w http.ResponseWriter, r *http.Request) {
 	datastore.SaveSession(t, *session)
 	SessionUserMap[t] = username
 
-	fmt.Println(t)
-	fmt.Println(t)
-	fmt.Println(t)
-	fmt.Println(t)
-	fmt.Println(t)
 	http.SetCookie(w, &http.Cookie{
 		Name:     "sid",
 		Value:    t,
@@ -101,10 +108,6 @@ func BeginRegistration(w http.ResponseWriter, r *http.Request) {
 		Name:  "sidfix",
 		Value: t,
 	})
-	fmt.Println(t)
-	fmt.Println(t)
-	fmt.Println(t)
-	fmt.Println(t)
 
 	JSONResponse(w, options, http.StatusOK)
 

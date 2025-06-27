@@ -2,6 +2,12 @@ package passkey
 
 import "github.com/go-webauthn/webauthn/webauthn"
 
+type PasskeyUser interface {
+	webauthn.User
+	AddCredential(*webauthn.Credential)
+	UpdateCredential(*webauthn.Credential)
+}
+
 type User struct {
 	ID          []byte
 	DisplayName string
