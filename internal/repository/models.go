@@ -4,19 +4,15 @@
 
 package repository
 
-type Credential struct {
-	ID              []byte
-	UserID          []byte
-	PublicKey       []byte
-	AttestationType string
-	Transport       []string
-	Flags           []byte
-	Authenticator   []byte
-	Attestation     []byte
+type Session struct {
+	UserID      []byte
+	SessionID   string
+	SessionData []byte
 }
 
 type User struct {
 	ID          []byte
 	DisplayName string
 	Name        string
+	Credentials []byte
 }

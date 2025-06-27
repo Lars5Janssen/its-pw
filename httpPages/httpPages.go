@@ -2,6 +2,8 @@ package pages
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -16,7 +18,6 @@ import (
 
 	"github.com/Lars5Janssen/its-pw/internal/repository"
 	"github.com/Lars5Janssen/its-pw/login"
-	"github.com/Lars5Janssen/its-pw/passkey"
 	"github.com/Lars5Janssen/its-pw/util"
 )
 
@@ -33,10 +34,9 @@ func WelcomePage(w http.ResponseWriter, r *http.Request) {
 }
 
 var (
-	webAuthn  *webauthn.WebAuthn
-	err       error
-	datastore passkey.PasskeyStore
-	l         log.Logger
+	webAuthn *webauthn.WebAuthn
+	err      error
+	l        log.Logger
 
 	// DB
 	ctx  context.Context
@@ -48,7 +48,6 @@ func InitPasskeys(logger log.Logger, context context.Context, connection *pgx.Co
 	conn = connection
 
 	l = logger
-	datastore = passkey.NewInMem(l)
 	wconfig := &webauthn.Config{
 		RPDisplayName: "ITS123",
 		// RPID:          "crisp-kangaroo-modern.ngrok-free.app",
@@ -56,6 +55,7 @@ func InitPasskeys(logger log.Logger, context context.Context, connection *pgx.Co
 		RPOrigins: []string{
 			"https://crisp-kangaroo-modern.ngrok-free.app",
 			"localhost",
+			"http://localhost:8080",
 			"localhost:8080",
 		},
 	}
@@ -67,18 +67,23 @@ func InitPasskeys(logger log.Logger, context context.Context, connection *pgx.Co
 
 func BeginRegistration(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("BeginRegistration\n")
+	repo := repository.New(conn)
+
 	username, err := getUsername(r)
+
 	if err != nil {
 		log.Fatalf("Could not get username: %s\n", err.Error())
 	}
-	repo := repository.New(conn)
+
 	repo.CreateUser(ctx, repository.CreateUserParams{
 		ID:          []byte(uuid.NewString()),
 		Name:        username,
 		DisplayName: username,
 	})
-	user := datastore.GetOrCreateUser(username)
+
+	user := GetUser(username)
 	options, session, err := webAuthn.BeginRegistration(user)
+
 	if err != nil {
 		msg := fmt.Sprintf("can't begin registration: %s", err.Error())
 		l.Printf("ERROR %s", msg)
@@ -86,59 +91,73 @@ func BeginRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t, err := datastore.GenSessionID()
+	t, err := GenSessionID()
 	if err != nil {
 		l.Printf("ERROR can't gen session id: %s", err.Error())
 		panic(err)
 	}
 
-	datastore.SaveSession(t, *session)
-	SessionUserMap[t] = username
+	repoUser, _ := repo.GetUserByName(ctx, username)
+	sessionData, _ := json.Marshal(session)
 
-	http.SetCookie(w, &http.Cookie{
-		Name:     "sid",
-		Value:    t,
-		Path:     "/app/beginRegistration",
-		MaxAge:   3600,
-		Secure:   true,
-		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
+	repo.CreateSession(ctx, repository.CreateSessionParams{
+		UserID:      repoUser.ID,
+		SessionID:   t,
+		SessionData: sessionData,
 	})
+
+	// http.SetCookie(w, &http.Cookie{
+	// 	Name:     "sid",
+	// 	Value:    t,
+	// 	Path:     "/app/beginRegistration",
+	// 	MaxAge:   3600,
+	// 	Secure:   true,
+	// 	HttpOnly: true,
+	// 	SameSite: http.SameSiteLaxMode,
+	// })
 	http.SetCookie(w, &http.Cookie{
 		Name:  "sidfix",
 		Value: t,
 	})
+	http.SetCookie(w, &http.Cookie{
+		Name:  "name",
+		Value: username,
+	})
 
 	JSONResponse(w, options, http.StatusOK)
+}
 
+func GenSessionID() (string, error) {
+	b := make([]byte, 32)
+	_, err := rand.Read(b)
+	if err != nil {
+		return "", err
+	}
+
+	return base64.URLEncoding.EncodeToString(b), nil
 }
 
 func EndRegistration(w http.ResponseWriter, r *http.Request) {
 	l.Println("END Registration")
-	util.PrintMap(SessionUserMap)
-	sid, err := r.Cookie("sid")
-	if err != nil {
-		l.Printf("ERROR cant get sid: %s", err.Error())
-		panic(err)
-	}
 	sidfix, err := r.Cookie("sidfix")
 	if err != nil {
 		l.Printf("ERROR cant get sidfix: %s", err.Error())
 		panic(err)
 	}
+	name, err := r.Cookie("name")
+	if err != nil {
+		l.Printf("ERROR cant get name: %s", err.Error())
+		panic(err)
+	}
 
-	session, _ := datastore.GetSession(sidfix.Value)
-	username, b := SessionUserMap[string(session.UserID)]
-	fmt.Println("sessionMap")
-	fmt.Println(b)
-	util.PrintMap(SessionUserMap)
-	fmt.Println("session")
-	fmt.Println(string(session.UserID))
-	fmt.Println("username")
-	fmt.Println(username)
-	user := datastore.GetOrCreateUser(username)
+	repo := repository.New(conn)
+	user, _ := repo.GetUserByName(ctx, name.Value)
+	marshaledSession, _ := repo.GetSessionBySessionId(ctx, sidfix.Value)
+	puser := GetUser(name.Value)
+	var session webauthn.SessionData
+	json.Unmarshal(marshaledSession.SessionData, &session)
 
-	credential, err := webAuthn.FinishRegistration(user, session, r)
+	credential, err := webAuthn.FinishRegistration(puser, session, r)
 	if err != nil {
 		msg := fmt.Sprintf("can't finish registration: %s", err.Error())
 		l.Printf("ERROR: %s", msg)
@@ -149,9 +168,13 @@ func EndRegistration(w http.ResponseWriter, r *http.Request) {
 		JSONResponse(w, msg, http.StatusBadRequest)
 		return
 	}
-	user.AddCredential(credential)
-	datastore.SaveUser(user)
-	datastore.DeleteSession(sid.Value)
+
+	jsonCreds, _ := json.Marshal(credential)
+	repo.UpdateUserCredentials(ctx, repository.UpdateUserCredentialsParams{
+		ID:          user.ID,
+		Credentials: jsonCreds,
+	})
+	repo.DeleteSessionByUserId(ctx, user.ID)
 	http.SetCookie(w, &http.Cookie{
 		Name:  "sid",
 		Value: "",

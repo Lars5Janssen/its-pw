@@ -9,24 +9,56 @@ import (
 	"context"
 )
 
-const createUser = `-- name: CreateUser :exec
-INSERT INTO users (id, display_name, name)
+const createSession = `-- name: CreateSession :exec
+INSERT INTO sessions (user_id, session_id, session_data)
 VALUES ($1, $2, $3)
+`
+
+type CreateSessionParams struct {
+	UserID      []byte
+	SessionID   string
+	SessionData []byte
+}
+
+func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) error {
+	_, err := q.db.Exec(ctx, createSession, arg.UserID, arg.SessionID, arg.SessionData)
+	return err
+}
+
+const createUser = `-- name: CreateUser :exec
+INSERT INTO users (id, display_name, name, credentials)
+VALUES ($1, $2, $3, $4)
 `
 
 type CreateUserParams struct {
 	ID          []byte
 	DisplayName string
 	Name        string
+	Credentials []byte
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
-	_, err := q.db.Exec(ctx, createUser, arg.ID, arg.DisplayName, arg.Name)
+	_, err := q.db.Exec(ctx, createUser,
+		arg.ID,
+		arg.DisplayName,
+		arg.Name,
+		arg.Credentials,
+	)
+	return err
+}
+
+const deleteSessionByUserId = `-- name: DeleteSessionByUserId :exec
+DELETE FROM sessions
+WHERE user_id = $1
+`
+
+func (q *Queries) DeleteSessionByUserId(ctx context.Context, userID []byte) error {
+	_, err := q.db.Exec(ctx, deleteSessionByUserId, userID)
 	return err
 }
 
 const getAllUsers = `-- name: GetAllUsers :many
-SELECT id, display_name, name FROM users
+SELECT id, display_name, name, credentials FROM users
 `
 
 func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
@@ -38,7 +70,12 @@ func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
 	var items []User
 	for rows.Next() {
 		var i User
-		if err := rows.Scan(&i.ID, &i.DisplayName, &i.Name); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.DisplayName,
+			&i.Name,
+			&i.Credentials,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -49,8 +86,34 @@ func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
 	return items, nil
 }
 
+const getSessionBySessionId = `-- name: GetSessionBySessionId :one
+SELECT user_id, session_id, session_data FROM sessions
+WHERE session_id = $1
+LIMIT 1
+`
+
+func (q *Queries) GetSessionBySessionId(ctx context.Context, sessionID string) (Session, error) {
+	row := q.db.QueryRow(ctx, getSessionBySessionId, sessionID)
+	var i Session
+	err := row.Scan(&i.UserID, &i.SessionID, &i.SessionData)
+	return i, err
+}
+
+const getSessionByUserId = `-- name: GetSessionByUserId :one
+SELECT user_id, session_id, session_data FROM sessions
+WHERE user_id = $1
+LIMIT 1
+`
+
+func (q *Queries) GetSessionByUserId(ctx context.Context, userID []byte) (Session, error) {
+	row := q.db.QueryRow(ctx, getSessionByUserId, userID)
+	var i Session
+	err := row.Scan(&i.UserID, &i.SessionID, &i.SessionData)
+	return i, err
+}
+
 const getUserByName = `-- name: GetUserByName :one
-SELECT id, display_name, name FROM users
+SELECT id, display_name, name, credentials FROM users
 WHERE name = $1
 LIMIT 1
 `
@@ -58,28 +121,27 @@ LIMIT 1
 func (q *Queries) GetUserByName(ctx context.Context, name string) (User, error) {
 	row := q.db.QueryRow(ctx, getUserByName, name)
 	var i User
-	err := row.Scan(&i.ID, &i.DisplayName, &i.Name)
+	err := row.Scan(
+		&i.ID,
+		&i.DisplayName,
+		&i.Name,
+		&i.Credentials,
+	)
 	return i, err
 }
 
-const getUserCredsById = `-- name: GetUserCredsById :one
-SELECT id, user_id, public_key, attestation_type, transport, flags, authenticator, attestation from credentials
+const updateUserCredentials = `-- name: UpdateUserCredentials :exec
+UPDATE users
+SET credentials = $2
 WHERE id = $1
-LIMIT 1
 `
 
-func (q *Queries) GetUserCredsById(ctx context.Context, id []byte) (Credential, error) {
-	row := q.db.QueryRow(ctx, getUserCredsById, id)
-	var i Credential
-	err := row.Scan(
-		&i.ID,
-		&i.UserID,
-		&i.PublicKey,
-		&i.AttestationType,
-		&i.Transport,
-		&i.Flags,
-		&i.Authenticator,
-		&i.Attestation,
-	)
-	return i, err
+type UpdateUserCredentialsParams struct {
+	ID          []byte
+	Credentials []byte
+}
+
+func (q *Queries) UpdateUserCredentials(ctx context.Context, arg UpdateUserCredentialsParams) error {
+	_, err := q.db.Exec(ctx, updateUserCredentials, arg.ID, arg.Credentials)
+	return err
 }

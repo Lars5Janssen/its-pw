@@ -23,7 +23,6 @@ func main() {
 	// Connect to DB
 	ctx := context.Background()
 	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
-	fmt.Println(os.Getenv("DATABASE_URL"))
 	if err != nil {
 		os.Exit(1)
 	}
