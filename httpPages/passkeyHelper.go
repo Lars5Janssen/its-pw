@@ -33,6 +33,7 @@ func InitPasskeys(logger log.Logger, context context.Context, connection *pgx.Co
 			"https://crisp-kangaroo-modern.ngrok-free.app",
 			"localhost",
 			"http://localhost:8080",
+			"http://localhost:8765",
 			"localhost:8080",
 		},
 	}
