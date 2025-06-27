@@ -35,6 +35,7 @@ func InitPasskeys(logger log.Logger, context context.Context, connection *pgx.Co
 			"http://localhost:8080",
 			"http://localhost:8765",
 			"https://localhost:8080/app/",
+			"https://localhost:8080",
 			"localhost:8080",
 		},
 	}
