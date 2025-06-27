@@ -25,6 +25,7 @@ func main() {
 	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
 		fmt.Println(os.Getenv("DATABASE_URL"))
+		fmt.Println(err.Error())
 		os.Exit(1)
 	}
 	defer conn.Close(ctx)
