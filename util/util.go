@@ -12,6 +12,7 @@ func PrintMap(m map[string]string) {
 	}
 }
 
+
 func ItoSmap(m map[interface{}]interface{}) map[string]string {
 	stringMap := map[string]string{}
 	for k, v := range m {

@@ -61,6 +61,18 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func setLoginSessionToken(w http.ResponseWriter, username string) {
+		sessionToken := uuid.NewString()
+		expiresAt := time.Now().Add(120 * time.Second)
+
+		login.AddSession(sessionToken, username, expiresAt)
+		http.SetCookie(w, &http.Cookie{
+			Name:    "session_token",
+			Value:   sessionToken,
+			Expires: expiresAt,
+		})
+}
+
 func LoginPage(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		username := r.FormValue("username")
@@ -80,15 +92,7 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		sessionToken := uuid.NewString()
-		expiresAt := time.Now().Add(120 * time.Second)
-
-		login.AddSession(sessionToken, username, expiresAt)
-		http.SetCookie(w, &http.Cookie{
-			Name:    "session_token",
-			Value:   sessionToken,
-			Expires: expiresAt,
-		})
+		setLoginSessionToken(w, username)
 
 		fmt.Printf("User %s logged in\n", username)
 		http.Redirect(w, r, "/app/welcome", http.StatusSeeOther)

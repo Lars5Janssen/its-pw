@@ -1,10 +1,19 @@
 document.getElementById('registerButton').addEventListener('click', register);
 document.getElementById('loginButton').addEventListener('click', login);
+document.getElementById('proceed').addEventListener('click', proceed);
 
 function showMessage(message, isError = false) {
     const messageElement = document.getElementById('message');
     messageElement.textContent = message;
     messageElement.style.Color = isError ? 'red' : 'green';
+}
+
+async function proceed() {
+    const current = window.location.href
+    window.location.href = current + "/proceed";
+    // fetch('/app/proceed', {
+        // method: 'POST'
+    // })
 }
 
 async function login() {

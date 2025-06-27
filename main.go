@@ -38,6 +38,9 @@ func main() {
 
 	http.HandleFunc("/app/beginRegistration", pages.BeginRegistration)
 	http.HandleFunc("/app/endRegistration", pages.EndRegistration)
+	http.HandleFunc("/app/beginLogin", pages.BeginLogin)
+	http.HandleFunc("/app/endLogin", pages.EndLogin)
+	http.HandleFunc("/app/proceed", pages.WelcomePage)
 
 	if _, err := os.Stat("creds.yaml"); err != nil {
 		files.WriteYAML("cred.yaml", make(map[string]string))

@@ -79,7 +79,6 @@ func EndRegistration(w http.ResponseWriter, r *http.Request) {
 	}
 
 	repo := repository.New(conn)
-	user, _ := repo.GetUserByName(ctx, name.Value)
 	marshaledSession, _ := repo.GetSessionBySessionId(ctx, sidfix.Value)
 	puser := GetUser(name.Value)
 	var session webauthn.SessionData
@@ -98,6 +97,7 @@ func EndRegistration(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonCreds, _ := json.Marshal(credential)
+	user, _ := repo.GetUserByName(ctx, name.Value)
 	repo.UpdateUserCredentials(ctx, repository.UpdateUserCredentialsParams{
 		ID:          user.ID,
 		Credentials: jsonCreds,
