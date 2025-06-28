@@ -6,10 +6,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
-	"os/exec"
+	"os"
 	"time"
 
 	"github.com/Lars5Janssen/its-pw/internal/repository"
@@ -59,31 +58,25 @@ func LocationTest(w http.ResponseWriter, r *http.Request) {
 
 func locationTest() bool {
 
-	url := "https://crisp-kangaroo-modern.ngrok-free.app/app/LocationTest"
-	// url := "localhost:8080/app/LocationTest"
-	cmd := exec.Command("curl", url)
-	output, err := cmd.Output()
+	location := os.Getenv("IS_IN_DOCKER")
+	if location == "" {
+		l.Println("Location Test Result: Local: Not in Docker Compose")
+		return false
+	} 
+
+	curlUUID, err := os.ReadFile("/locationTest/uuid")
 	if err != nil {
+		l.Println("Location Test Result: Local: File Error: ", err.Error())
 		return false
 	}
-	l.Println("Location Test Data: ", string(output), "\ngloablID: ", globalID)
-	return true
-	resp, err := http.Get(url)
-	if err != nil {
-		l.Println("Location Test Result: Local, URL not reachable")
-		return false
-	}
-	defer resp.Body.Close()
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		l.Println("Location Test Result: Local, Body Error:", err.Error())
-		return false
-	}
-	if string(data) == globalID {
-		l.Println("Location Test Result: Public")
+
+	if string(curlUUID) == globalID {
+		l.Println("Location Test Result: Global")
 		return true
 	}
-	l.Println("Location Test Data: ", string(data), "\ngloablID: ", globalID)
+
+
+	l.Println("Location Test Data: ", string(curlUUID), "\ngloablID: ", globalID)
 	l.Println("Location Test Result: Local")
 	return false
 }
