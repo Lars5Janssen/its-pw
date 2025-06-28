@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/Lars5Janssen/its-pw/internal/repository"
@@ -52,10 +53,13 @@ func InitPasskeys(logger log.Logger, context context.Context, connection *pgx.Co
 	conn = connection
 
 	l = logger
+	rpid := "localhost"
+	if os.Getenv("APP_IS_IN_DOCER_CONTAINER") == "true" {
+		rpid := "crisp-kangaroo-modern.ngrok-free.app"
+	}
 	wconfig := &webauthn.Config{
 		RPDisplayName: "ITS123",
-		// RPID:          "crisp-kangaroo-modern.ngrok-free.app",
-		RPID: "localhost",
+		RPID:          rpid,
 		RPOrigins: []string{
 			"https://crisp-kangaroo-modern.ngrok-free.app",
 			"localhost",
