@@ -11,7 +11,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 	totpCode := r.FormValue("totp")
-	fmt.Printf(
+	l.Printf(
 		"Login Endpoint was accsessed for %s with pw:\"%s\" and totp:%s\n",
 		username,
 		password,
@@ -20,7 +20,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	result := login.CheckLogin(username, password, totpCode)
 	if !result {
-		fmt.Printf("Invalid credentials entered\n")
+		l.Printf("Invalid credentials entered\n")
 		fmt.Fprintf(w, "Invalid credentials")
 		return
 	}
@@ -34,12 +34,12 @@ func Login(w http.ResponseWriter, r *http.Request) {
 func SignUp(w http.ResponseWriter, r *http.Request) {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
-	fmt.Printf("SignUp Endpoint was accsessed for %s with pw:\"%s\"\n", username, password)
+	l.Printf("SignUp Endpoint was accsessed for %s with pw:\"%s\"\n", username, password)
 
 	login.AddUser(username, password)
 	login.GenerateTOTP(username)
 
-	fmt.Printf("New Login for %s registered\n", username)
+	l.Printf("New Login for %s registered\n", username)
 
 	http.Redirect(w, r, "/app/login", http.StatusSeeOther)
 }

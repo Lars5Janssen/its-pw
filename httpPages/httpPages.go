@@ -13,17 +13,17 @@ import (
 func WelcomePage(w http.ResponseWriter, r *http.Request) {
 	vaild, status, _, username := login.CheckSessionToken(w, r)
 	if !vaild {
-		fmt.Println("Login Page was accsessed with invalid Token")
+		l.Println("Login Page was accsessed with invalid Token")
 		http.Redirect(w, r, "/app/login", status)
 		return
 	}
-	fmt.Println("Login Page was accsessed with valid Token")
+	l.Println("Login Page was accsessed with valid Token")
 	userString := fmt.Sprintf("Welcome, %s\nyou are logged in!", username)
 	fmt.Fprint(w, userString)
 }
 
 func LandingPage(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("LoginPage was accsessed")
+	l.Println("LoginPage was accsessed")
 
 	html, err := os.ReadFile("templates/landing.html")
 	util.Check(err)

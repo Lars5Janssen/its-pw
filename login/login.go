@@ -3,7 +3,6 @@ package login
 import (
 	"context"
 	"crypto/sha256"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -34,16 +33,6 @@ type Session struct {
 func (s Session) isExpired() bool {
 	return s.expiry.Before(time.Now())
 }
-
-// func ReadCreds() map[string]string {
-// 	fmt.Println("Reading Credentials")
-// 	return files.ReadYaml("creds.yaml")
-// }
-//
-// func WriteCreds(creds map[string]string) {
-// 	fmt.Println("Writing Credentials")
-// 	files.WriteYAML("creds.yaml", creds)
-// }
 
 func hashMe(toHash string) string {
 	h := sha256.New()
@@ -135,7 +124,7 @@ func GenerateTOTP(username string) {
 		TotpSecret: []byte(secret),
 	})
 	// util.JSONResponse(w, secret, http.StatusOK)
-	fmt.Println(key.Secret())
+	l.Println("TOTP SECRET FOR USER: ", username, "\nTOTP SECRET:",key.Secret())
 }
 
 func CheckSessionToken(w http.ResponseWriter, r *http.Request) (bool, int, Session, string) {

@@ -7,12 +7,6 @@ import (
 	"net/http"
 )
 
-func PrintMap(m map[string]string) {
-	for k, v := range m {
-		fmt.Printf("k:%s,v:%s\n", k, v)
-	}
-}
-
 func JSONResponse(w http.ResponseWriter, data interface{}, status int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)

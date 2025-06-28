@@ -14,7 +14,7 @@ import (
 )
 
 func BeginRegistration(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("BeginRegistration\n")
+	l.Printf("BeginRegistration\n")
 	repo := repository.New(conn)
 
 	username, err := getUsername(r)

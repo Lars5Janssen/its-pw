@@ -106,7 +106,7 @@ func EndLogin(w http.ResponseWriter, r *http.Request) {
 
 	setLoginSessionToken(w, user.Name)
 
-	fmt.Printf("User %s logged in\n", user.Name)
+	l.Printf("User %s logged in\n", user.Name)
 	util.JSONResponse(w, "LOGIN Success", http.StatusOK)
 	// http.Redirect(w, r, "/app/welcome", http.StatusSeeOther)
 	return
