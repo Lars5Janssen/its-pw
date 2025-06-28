@@ -31,10 +31,11 @@ func main() {
 	defer conn.Close(ctx)
 
 	// HTTP Server
-	http.HandleFunc("/app/", pages.LoginPage)
-	http.HandleFunc("/app/login", pages.LoginPage)
-	http.HandleFunc("/app/welcome", pages.WelcomePage)
-	http.HandleFunc("/app/signup", pages.SignUp)
+	http.HandleFunc("GET /app/", pages.LandingPage)
+	http.HandleFunc("POST /app/login", pages.Login)
+	http.HandleFunc("GET /app/login", pages.LandingPage)
+	http.HandleFunc("GET /app/welcome", pages.WelcomePage)
+	http.HandleFunc("POST /app/signup", pages.SignUp)
 
 	http.HandleFunc("/app/beginRegistration", pages.BeginRegistration)
 	http.HandleFunc("/app/endRegistration", pages.EndRegistration)
