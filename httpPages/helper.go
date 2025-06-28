@@ -41,8 +41,8 @@ func InitPasskeys(logger log.Logger, context context.Context, connection *pgx.Co
 
 func initRPID() {
 	if rpidInit {
-		l.Println("RPID init")
 		return}
+		l.Println("RPID init")
 	rpidInit = true
 	rpid := "localhost"
 	if locationTest() {
