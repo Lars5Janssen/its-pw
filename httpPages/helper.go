@@ -32,7 +32,7 @@ var (
 func GetUser(username string) passkey.PasskeyUser {
 	repo := repository.New(conn)
 	user, err := repo.GetUserByName(ctx, username)
-	util.EasyCheck(err, "ERROR in GetUser util while getting user by name:", err.Error())
+	util.EasyCheck(err, "ERROR in GetUser util while getting user by name:", "err")
 
 	u := &passkey.User{
 		ID:          user.ID,

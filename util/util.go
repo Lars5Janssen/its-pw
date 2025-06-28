@@ -8,14 +8,15 @@ import (
 
 var l log.Logger
 
-func Init(l log.Logger) {
-	l = l
+func Init(logger log.Logger) {
+	l = logger
 }
 
 func JSONResponse(w http.ResponseWriter, data interface{}, status int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(data)
+	err := json.NewEncoder(w).Encode(data)
+	EasyCheck(err, "ERROR in JSONResponse:", "err")
 }
 
 func Check(e error) {
@@ -27,6 +28,11 @@ func Check(e error) {
 
 func EasyCheck(e error, v ...any) {
 	if e != nil {
-		l.Println(v)
+		for i, s := range v {
+			if s == "err" {
+				v[i] = e.Error()
+			}
+		}
+		l.Println("EASYCHECK", v)
 	}
 }

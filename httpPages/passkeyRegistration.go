@@ -45,8 +45,10 @@ func BeginRegistration(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	repoUser, _ := repo.GetUserByName(ctx, username)
-	sessionData, _ := json.Marshal(session)
+	repoUser, err := repo.GetUserByName(ctx, username)
+	util.EasyCheck(err, "ERROR in BeginRegistraition while getting user by name:", "err")
+	sessionData, err := json.Marshal(session)
+	util.EasyCheck(err, "ERROR in BeginRegistraition while marshaling sessionData:", "err")
 
 	repo.CreateSession(ctx, repository.CreateSessionParams{
 		UserID:      repoUser.ID,
@@ -80,10 +82,12 @@ func EndRegistration(w http.ResponseWriter, r *http.Request) {
 	}
 
 	repo := repository.New(conn)
-	marshaledSession, _ := repo.GetSessionBySessionId(ctx, sidfix.Value)
+	marshaledSession, err := repo.GetSessionBySessionId(ctx, sidfix.Value)
+	util.EasyCheck(err, "ERROR in EndRegistration while getting session by id:", "err")
 	puser := GetUser(name.Value)
 	var session webauthn.SessionData
-	json.Unmarshal(marshaledSession.SessionData, &session)
+	err = json.Unmarshal(marshaledSession.SessionData, &session)
+	util.EasyCheck(err, "ERROR in EndRegistration while unmarshaling session data:", "err")
 
 	credential, err := webAuthn.FinishRegistration(puser, session, r)
 	if err != nil {
@@ -97,13 +101,17 @@ func EndRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonCreds, _ := json.Marshal(credential)
-	user, _ := repo.GetUserByName(ctx, name.Value)
-	repo.UpdateUserCredentials(ctx, repository.UpdateUserCredentialsParams{
+	jsonCreds, err := json.Marshal(credential)
+	util.EasyCheck(err, "ERROR in EndRegistration while marshaling creds:", "err")
+	user, err := repo.GetUserByName(ctx, name.Value)
+	util.EasyCheck(err, "ERROR in EndRegistration while getting user by name:", "err")
+	err = repo.UpdateUserCredentials(ctx, repository.UpdateUserCredentialsParams{
 		ID:          user.ID,
 		Credentials: jsonCreds,
 	})
-	repo.DeleteSessionByUserId(ctx, user.ID)
+	util.EasyCheck(err, "ERROR in EndRegistration while updating user creds:", "err")
+	err = repo.DeleteSessionByUserId(ctx, user.ID)
+	util.EasyCheck(err, "ERROR in EndRegistration while deting user session by id:", "err")
 	http.SetCookie(w, &http.Cookie{
 		Name:  "sid",
 		Value: "",

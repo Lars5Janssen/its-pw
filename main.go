@@ -18,6 +18,7 @@ var l log.Logger
 func main() {
 	// Logging
 	l = *log.Default()
+	util.Init(l)
 
 	// Connect to DB
 	ctx := context.Background()
@@ -46,7 +47,6 @@ func main() {
 	// 	files.WriteYAML("cred.yaml", make(map[string]string))
 	// }
 	login.InitLogin(l, ctx, conn)
-	util.Init(l)
 	pages.InitPasskeys(l, ctx, conn)
 	login.AddDefaultUser()
 

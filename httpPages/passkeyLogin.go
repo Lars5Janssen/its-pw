@@ -36,15 +36,15 @@ func BeginLogin(w http.ResponseWriter, r *http.Request) {
 
 	repo := repository.New(conn)
 	repoUser, err := repo.GetUserByName(ctx, username)
-	util.EasyCheck(err, "ERROR in BeginLogin while Getting User by Name:", err.Error())
+	util.EasyCheck(err, "ERROR in BeginLogin while Getting User by Name:", "err")
 	sessionData, err := json.Marshal(session)
-	util.EasyCheck(err, "ERROR in BeginLogin while Marshaling sessionData:", err.Error())
+	util.EasyCheck(err, "ERROR in BeginLogin while Marshaling sessionData:", "err")
 	err = repo.CreateSession(ctx, repository.CreateSessionParams{
 		UserID:      repoUser.ID,
 		SessionID:   t,
 		SessionData: sessionData,
 	})
-	util.EasyCheck(err, "ERROR in BeginLogin while Creating Session:", err.Error())
+	util.EasyCheck(err, "ERROR in BeginLogin while Creating Session:", "err")
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "sid",
@@ -81,11 +81,11 @@ func EndLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	repo := repository.New(conn)
 	marshaledSession, err := repo.GetSessionBySessionId(ctx, sidfix.Value)
-	util.EasyCheck(err, "ERROR in EndLogin while Getting Session by Id:", err.Error())
+	util.EasyCheck(err, "ERROR in EndLogin while Getting Session by Id:", "err")
 	puser := GetUser(name.Value)
 	var session webauthn.SessionData
 	err = json.Unmarshal(marshaledSession.SessionData, &session)
-	util.EasyCheck(err, "ERROR in EndLogin while Unmarshaling SessionData", err.Error())
+	util.EasyCheck(err, "ERROR in EndLogin while Unmarshaling SessionData", "err")
 
 	credential, err := webAuthn.FinishLogin(puser, session, r)
 	if err != nil {
@@ -98,16 +98,16 @@ func EndLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonCreds, err := json.Marshal(credential)
-	util.EasyCheck(err, "ERROR in EndLogin while Marshaling credentials:", err.Error())
+	util.EasyCheck(err, "ERROR in EndLogin while Marshaling credentials:", "err")
 	user, err := repo.GetUserByName(ctx, name.Value)
-	util.EasyCheck(err, "ERROR in EndLogin while Getting User by Name:", err.Error())
+	util.EasyCheck(err, "ERROR in EndLogin while Getting User by Name:", "err")
 	err = repo.UpdateUserCredentials(ctx, repository.UpdateUserCredentialsParams{
 		ID:          user.ID,
 		Credentials: jsonCreds,
 	})
-	util.EasyCheck(err, "ERROR in EndLogin while updating user creds:",err.Error())
+	util.EasyCheck(err, "ERROR in EndLogin while updating user creds:","err")
 	err = repo.DeleteSessionByUserId(ctx, user.ID)
-	util.EasyCheck(err, "ERROR in EndLogin while Deleting Session:", err.Error())
+	util.EasyCheck(err, "ERROR in EndLogin while Deleting Session:", "err")
 	http.SetCookie(w, &http.Cookie{
 		Name:  "sid",
 		Value: "",

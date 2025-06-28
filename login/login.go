@@ -48,7 +48,7 @@ func AddSession(uuid string, username string, expiresAt time.Time) {
 		Username:  username,
 		ExpiresAt: expiresAt,
 	})
-	util.EasyCheck(err, "ERROR in adding session.\nERROR:", err.Error(),
+	util.EasyCheck(err, "ERROR in adding session.\nERROR:", "err",
 		"\n\nDETAILS:\n",
 		"uuid:", uuid,
 		"\nusername:", username,
@@ -60,7 +60,7 @@ func CheckLogin(username string, password string, totpCode string) bool {
 	user, err := repo.GetPwUserByName(ctx, username)
 
 	if err != nil {
-		l.Println("CHECK LOGIN: error in db: ", err.Error())
+		l.Println("CHECK LOGIN: error in db: ", "err")
 		return false
 	}
 
@@ -88,13 +88,13 @@ func AddDefaultUser() {
 	if !AddUser("default", "default") {
 		l.Println("ERROR in add def user, error in adduser()")
 	}
-	util.EasyCheck(err, "ERROR in def user: ", err.Error())
+	util.EasyCheck(err, "ERROR in def user: ", "err")
 	totpSecret := "QACZSSNENVAXRPMVJWCY2NL6RT34W2HP"
 	err = repo.UpdatePwUsertotpByName(ctx, repository.UpdatePwUsertotpByNameParams{
 		Username:   "default",
 		TotpSecret: []byte(totpSecret),
 	})
-	util.EasyCheck(err, "ERROR in updateing default user totp:", err.Error())
+	util.EasyCheck(err, "ERROR in updateing default user totp:", "err")
 	l.Println("Added Default user")
 }
 
@@ -102,11 +102,12 @@ func AddUser(username string, password string) bool {
 	repo := repository.New(conn)
 	userExsists, err := repo.GetPwUserByName(ctx, username)
 	if err != nil {
-		l.Println("ERROR in Add User, User Exsists", err.Error())
-	}
-	if userExsists.Username == username {
-		l.Println("USER ALLREADY REGISTERED")
-		return false
+		// l.Println("ERROR in Add User while getting user by name", err.Error())
+	} else {
+		if userExsists.Username == username {
+			l.Println("USER ALLREADY REGISTERED")
+			return false
+		}
 	}
 	hash := hashMe(password)
 	empty := ""
@@ -139,7 +140,7 @@ func GenerateTOTP(username string) {
 		Username:   username,
 		TotpSecret: []byte(secret),
 	})
-	util.EasyCheck(err, "ERROR in Updating user totp:", err.Error())
+	util.EasyCheck(err, "ERROR in Updating user totp:", "err")
 	// util.JSONResponse(w, secret, http.StatusOK)
 	l.Println("TOTP SECRET FOR USER: ", username, "\nTOTP SECRET:", key.Secret())
 }
@@ -158,7 +159,7 @@ func CheckSessionToken(w http.ResponseWriter, r *http.Request) (bool, int, Sessi
 	sessionToken := c.Value
 	repo := repository.New(conn)
 	sessions, err := repo.GetPwUserSessionByUuid(ctx, sessionToken)
-	util.EasyCheck(err, "ERROR in CheckSessionToken:", err.Error())
+	util.EasyCheck(err, "ERROR in CheckSessionToken:", "err")
 	if len(sessions) == 0 {
 		w.WriteHeader(http.StatusUnauthorized)
 		return false, http.StatusUnauthorized, Session{}, ""
