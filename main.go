@@ -43,9 +43,6 @@ func main() {
 	http.HandleFunc("POST /app/endLogin", pages.EndLogin)
 	http.HandleFunc("POST /app/proceed", pages.WelcomePage)
 
-	// if _, err := os.Stat("creds.yaml"); err != nil {
-	// 	files.WriteYAML("cred.yaml", make(map[string]string))
-	// }
 	login.InitLogin(l, ctx, conn)
 	pages.InitPasskeys(l, ctx, conn)
 	login.AddDefaultUser()
