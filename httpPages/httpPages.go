@@ -22,23 +22,7 @@ func WelcomePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, userString)
 }
 
-func SignUp(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		username := r.FormValue("username")
-		password := r.FormValue("password")
-		fmt.Printf("SignUp Endpoint was accsessed for %s with pw:\"%s\"\n", username, password)
-
-		login.AddUser(username, password)
-		login.GenerateTOTP(username)
-
-		fmt.Printf("New Login for %s registered\n", username)
-
-		http.Redirect(w, r, "/app/login", http.StatusSeeOther)
-		return
-	}
-}
-
-func LandingPage(w http.ResponseWriter, r* http.Request) {
+func LandingPage(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("LoginPage was accsessed")
 
 	html, err := os.ReadFile("templates/landing.html")
@@ -56,4 +40,3 @@ func LandingPage(w http.ResponseWriter, r* http.Request) {
 		template.JS(string(otherscript)+"\n"+string(script)),
 	)
 }
-
