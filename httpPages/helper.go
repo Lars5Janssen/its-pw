@@ -57,7 +57,7 @@ func LocationTest(w http.ResponseWriter, r *http.Request) {
 
 func locationTest() bool {
 
-	url := "crisp-kangaroo-modern.ngrok-free.app/app/LocationTest"
+	url := "https://crisp-kangaroo-modern.ngrok-free.app/app/LocationTest"
 	resp, err := http.Get(url)
 	if err != nil {
 		l.Println("Location Test Result: Local, URL not reachable")
@@ -69,7 +69,11 @@ func locationTest() bool {
 		l.Println("Location Test Result: Local, Body Error:", err.Error())
 		return false
 	}
-	l.Println("Location Test DATA: ", string(data))
+	if string(data) == globalID {
+		l.Println("Location Test Result: Public")
+		return true
+	}
+	l.Println("Location Test Result: Local")
 	return false
 }
 
