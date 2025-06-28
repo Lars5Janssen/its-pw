@@ -5,8 +5,8 @@ go 1.24.2
 require (
 	github.com/go-webauthn/webauthn v0.13.0
 	github.com/google/uuid v1.6.0
+	github.com/jackc/pgx/v5 v5.7.5
 	github.com/pquerna/otp v1.5.0
-	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -17,7 +17,6 @@ require (
 	github.com/google/go-tpm v0.9.5 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
-	github.com/jackc/pgx/v5 v5.7.5 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	golang.org/x/crypto v0.38.0 // indirect
