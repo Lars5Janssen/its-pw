@@ -27,7 +27,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	setLoginSessionToken(w, username)
 
-	fmt.Printf("User %s logged in\n", username)
+	l.Printf("User %s logged in\n", username)
 	http.Redirect(w, r, "/app/welcome", http.StatusSeeOther)
 }
 

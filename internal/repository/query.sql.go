@@ -17,8 +17,8 @@ VALUES ($1, $2, $3)
 
 type AddPwUserParams struct {
 	Username   string
-	Pw         *string
-	TotpSecret *string
+	Pw         []byte
+	TotpSecret []byte
 }
 
 func (q *Queries) AddPwUser(ctx context.Context, arg AddPwUserParams) error {
@@ -77,6 +77,16 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
 		arg.Name,
 		arg.Credentials,
 	)
+	return err
+}
+
+const deletePwUserByName = `-- name: DeletePwUserByName :exec
+DELETE from pwusers
+WHERE username = $1
+`
+
+func (q *Queries) DeletePwUserByName(ctx context.Context, username string) error {
+	_, err := q.db.Exec(ctx, deletePwUserByName, username)
 	return err
 }
 
@@ -232,7 +242,7 @@ WHERE username = $1
 
 type UpdatePwUserPwByNameParams struct {
 	Username string
-	Pw       *string
+	Pw       []byte
 }
 
 func (q *Queries) UpdatePwUserPwByName(ctx context.Context, arg UpdatePwUserPwByNameParams) error {
@@ -248,7 +258,7 @@ WHERE username = $1
 
 type UpdatePwUsertotpByNameParams struct {
 	Username   string
-	TotpSecret *string
+	TotpSecret []byte
 }
 
 func (q *Queries) UpdatePwUsertotpByName(ctx context.Context, arg UpdatePwUsertotpByNameParams) error {

@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS pwusers (
     username TEXT PRIMARY KEY,
-    pw TEXT,
-    totp_secret TEXT
+    pw BYTEA,
+    totp_secret BYTEA
 );
 
 CREATE TABLE IF NOT EXISTS pwsessions (

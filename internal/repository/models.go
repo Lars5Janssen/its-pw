@@ -16,8 +16,8 @@ type Pwsession struct {
 
 type Pwuser struct {
 	Username   string
-	Pw         *string
-	TotpSecret *string
+	Pw         []byte
+	TotpSecret []byte
 }
 
 type Session struct {

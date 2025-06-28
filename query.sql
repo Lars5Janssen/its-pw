@@ -7,6 +7,10 @@ LIMIT 1;
 INSERT INTO pwusers (username, pw, totp_secret)
 VALUES ($1, $2, $3);
 
+-- name: DeletePwUserByName :exec
+DELETE from pwusers
+WHERE username = $1;
+
 -- name: UpdatePwUserPwByName :exec
 UPDATE pwusers
 SET pw = $2

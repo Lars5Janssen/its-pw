@@ -9,7 +9,6 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	// "github.com/Lars5Janssen/its-pw/files"
 	"github.com/Lars5Janssen/its-pw/httpPages"
 	"github.com/Lars5Janssen/its-pw/login"
 )
@@ -31,7 +30,7 @@ func main() {
 	defer conn.Close(ctx)
 
 	// HTTP Server
-	http.HandleFunc("GET /app/", pages.LandingPage)
+	// http.HandleFunc("GET /app/", pages.LandingPage)
 	http.HandleFunc("POST /app/login", pages.Login)
 	http.HandleFunc("GET /app/login", pages.LandingPage)
 	http.HandleFunc("GET /app/welcome", pages.WelcomePage)
@@ -50,6 +49,6 @@ func main() {
 	pages.InitPasskeys(l, ctx, conn)
 	login.AddDefaultUser()
 
-	fmt.Println("Server started")
+	l.Println("Server started")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

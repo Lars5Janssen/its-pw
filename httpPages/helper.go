@@ -53,8 +53,8 @@ func InitPasskeys(logger log.Logger, context context.Context, connection *pgx.Co
 	l = logger
 	wconfig := &webauthn.Config{
 		RPDisplayName: "ITS123",
-		RPID:          "crisp-kangaroo-modern.ngrok-free.app",
-		// RPID: "localhost",
+		// RPID:          "crisp-kangaroo-modern.ngrok-free.app",
+		RPID: "localhost",
 		RPOrigins: []string{
 			"https://crisp-kangaroo-modern.ngrok-free.app",
 			"localhost",

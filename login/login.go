@@ -11,7 +11,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/pquerna/otp/totp"
 
-	// "github.com/Lars5Janssen/its-pw/files"
 	"github.com/Lars5Janssen/its-pw/internal/repository"
 )
 
@@ -63,43 +62,59 @@ func AddSession(uuid string, username string, expiresAt time.Time) {
 
 func CheckLogin(username string, password string, totpCode string) bool {
 
-	repo:=repository.New(conn)
+	repo := repository.New(conn)
 	user, err := repo.GetPwUserByName(ctx, username)
+
 	if err != nil {
+		l.Println("CHECK LOGIN: error in db: ", err.Error())
 		return false
 	}
 
-	if *user.Pw != hashMe(password) {
+	if string(user.Pw) != hashMe(password) {
+		l.Println("CHECK LOGIN: pw do not match")
 		return false
 	}
 
-	if user.TotpSecret == nil || *user.TotpSecret == "" {
+	if user.TotpSecret == nil || string(user.TotpSecret) == "" {
+		l.Println("CHECK LOGIN: totp secret error")
 		return false
 	}
 
-	if totp.Validate(totpCode, *user.TotpSecret) {
+	if totp.Validate(totpCode, string(user.TotpSecret)) {
+		l.Println("CHECK LOGIN: Check Login succsess")
 		return true
 	}
+	l.Println("CHECK LOGIN: Check Login failure")
 	return false
 }
 
 func AddDefaultUser() {
-	AddUser("default", "default")
 	repo := repository.New(conn)
+	err := repo.DeletePwUserByName(ctx, "default")
+	AddUser("default", "default")
+	if err != nil {
+		l.Println("ERROR in def user: ", err.Error())
+	}
 	totpSecret := "QACZSSNENVAXRPMVJWCY2NL6RT34W2HP"
 	repo.UpdatePwUsertotpByName(ctx, repository.UpdatePwUsertotpByNameParams{
 		Username:   "default",
-		TotpSecret: &totpSecret,
+		TotpSecret: []byte(totpSecret),
 	})
 }
 
 func AddUser(username string, password string) {
 	repo := repository.New(conn)
 	hash := hashMe(password)
-	repo.AddPwUser(ctx, repository.AddPwUserParams{
-		Username: username,
-		Pw:       &hash,
+	empty := ""
+	err := repo.AddPwUser(ctx, repository.AddPwUserParams{
+		Username:   username,
+		Pw:         []byte(hash),
+		TotpSecret: []byte(empty),
 	})
+	if err != nil {
+		l.Println("ERROR in adding user: ", username, "\n", err.Error())
+	}
+	l.Println("Added Default user")
 }
 
 func GenerateTOTP(username string) {
@@ -117,7 +132,7 @@ func GenerateTOTP(username string) {
 	secret := key.Secret()
 	repo.UpdatePwUsertotpByName(ctx, repository.UpdatePwUsertotpByNameParams{
 		Username:   username,
-		TotpSecret: &secret,
+		TotpSecret: []byte(secret),
 	})
 	// util.JSONResponse(w, secret, http.StatusOK)
 	fmt.Println(key.Secret())
@@ -150,6 +165,7 @@ func CheckSessionToken(w http.ResponseWriter, r *http.Request) (bool, int, Sessi
 	}
 
 	if session.isExpired() {
+		l.Println("Session is expired")
 		repo.DeletePwUserSessionByUuid(ctx, sessions[0].Uuid)
 		w.WriteHeader(http.StatusUnauthorized)
 		return false, http.StatusUnauthorized, Session{}, ""
