@@ -18,6 +18,7 @@ var l log.Logger
 func main() {
 	// Logging
 	l = *log.Default()
+	l.Println("VERSION LT DEV")
 	util.Init(l)
 
 	// Connect to DB
