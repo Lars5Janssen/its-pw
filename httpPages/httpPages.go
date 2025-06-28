@@ -22,6 +22,10 @@ func WelcomePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, userString)
 }
 
+func LandingPageRedirect(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/app/welcome", http.StatusOK)
+}
+
 func LandingPage(w http.ResponseWriter, r *http.Request) {
 	initRPID()
 	l.Println("LoginPage was accsessed")
