@@ -33,15 +33,14 @@ func main() {
 
 	// HTTP Server
 	// Redirects
-	http.HandleFunc("GET /app/login/proceed", pages.LandingPageRedirect)
-	http.HandleFunc("GET /app/proceed", pages.LandingPageRedirect)
-	http.HandleFunc("GET /app/", pages.LandingPageRedirect)
-	http.HandleFunc("GET /app/proceed", pages.LandingPageRedirect)
+	// http.HandleFunc("GET /app/login/proceed", pages.WelcomePage)
+	// http.HandleFunc("GET /app/proceed", pages.WelcomePage)
 
 	http.HandleFunc("GET /app/LocationTest", pages.LocationTest)
 
 	// Actual Pages
 	http.HandleFunc("GET /app/login", pages.LandingPage)
+	// http.HandleFunc("GET /app/", pages.LandingPage)
 	http.HandleFunc("GET /app/welcome", pages.WelcomePage)
 
 	// Password login endpoints
