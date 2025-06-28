@@ -34,6 +34,7 @@ func main() {
 	// HTTP Server
 	// Redirects
 	http.HandleFunc("GET /app/login/proceed", pages.LandingPageRedirect)
+	http.HandleFunc("GET /app/proceed", pages.LandingPageRedirect)
 	http.HandleFunc("GET /app/", pages.LandingPageRedirect)
 	http.HandleFunc("GET /app/proceed", pages.LandingPageRedirect)
 
