@@ -73,8 +73,8 @@ func locationTest() bool {
 		l.Println("Location Test Result: Public")
 		return true
 	}
-	l.Println("Location Test Result: Local")
 	l.Println("Location Test Data: ", string(data), "\ngloablID: ", globalID)
+	l.Println("Location Test Result: Local")
 	return false
 }
 
