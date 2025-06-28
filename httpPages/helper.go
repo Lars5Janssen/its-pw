@@ -28,6 +28,7 @@ var (
 	ctx      context.Context
 	conn     *pgx.Conn
 	globalID string
+	rpidInit bool
 )
 
 // FOR DB
@@ -88,8 +89,13 @@ func InitPasskeys(logger log.Logger, context context.Context, connection *pgx.Co
 	ctx = context
 	conn = connection
 	globalID = uuid.NewString()
-
 	l = logger
+	rpidInit = false
+}
+
+func initRPID() {
+	if rpidInit {return}
+	rpidInit = true
 	rpid := "localhost"
 	if locationTest() {
 		rpid = "crisp-kangaroo-modern.ngrok-free.app"

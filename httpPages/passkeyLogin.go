@@ -11,6 +11,7 @@ import (
 )
 
 func BeginLogin(w http.ResponseWriter, r *http.Request) {
+	initRPID()
 	l.Println("Begin Login")
 	username, err := getUsername(r)
 	if err != nil {
@@ -68,6 +69,7 @@ func BeginLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func EndLogin(w http.ResponseWriter, r *http.Request) {
+	initRPID()
 	l.Println("End Login")
 	sidfix, err := r.Cookie("sidfix")
 	if err != nil {

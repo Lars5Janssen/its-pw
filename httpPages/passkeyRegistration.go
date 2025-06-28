@@ -14,6 +14,7 @@ import (
 )
 
 func BeginRegistration(w http.ResponseWriter, r *http.Request) {
+	initRPID()
 	l.Printf("BeginRegistration\n")
 	repo := repository.New(conn)
 
@@ -69,6 +70,7 @@ func BeginRegistration(w http.ResponseWriter, r *http.Request) {
 }
 
 func EndRegistration(w http.ResponseWriter, r *http.Request) {
+	initRPID()
 	l.Println("END Registration")
 	sidfix, err := r.Cookie("sidfix")
 	if err != nil {
