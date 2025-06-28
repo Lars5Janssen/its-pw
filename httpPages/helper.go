@@ -65,6 +65,7 @@ func locationTest() bool {
 		return false
 	} 
 
+	l.Println("SLEEP")
 	time.Sleep(9)
 	curlUUID, err := os.ReadFile("/locationTest/uuid")
 	if err != nil {
