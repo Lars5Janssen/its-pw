@@ -36,7 +36,7 @@ func main() {
 	http.HandleFunc("POST /app/login/proceed", pages.LandingPageRedirect)
 	http.HandleFunc("POST /app/proceed", pages.LandingPageRedirect)
 	http.HandleFunc("POST /app/", pages.LandingPageRedirect)
-	http.HandleFunc("GET /app/proceed", pages.LandingPageRedirect)
+	http.HandleFunc("GET /app/proceed", pages.WelcomePage)
 
 	http.HandleFunc("GET /app/LocationTest", pages.LocationTest)
 
