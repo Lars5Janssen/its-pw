@@ -57,7 +57,8 @@ func LocationTest(w http.ResponseWriter, r *http.Request) {
 
 func locationTest() bool {
 
-	url := "https://crisp-kangaroo-modern.ngrok-free.app/app/LocationTest"
+	// url := "https://crisp-kangaroo-modern.ngrok-free.app/app/LocationTest"
+	url := "localhost/app/LocationTest"
 	resp, err := http.Get(url)
 	if err != nil {
 		l.Println("Location Test Result: Local, URL not reachable")
