@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os/exec"
 	"time"
 
 	"github.com/Lars5Janssen/its-pw/internal/repository"
@@ -51,14 +52,22 @@ func GetUser(username string) PasskeyUser {
 }
 
 func LocationTest(w http.ResponseWriter, r *http.Request) {
+	l.Println("Location Test Requested")
 	fmt.Fprintf(w, globalID)
 	return
 }
 
 func locationTest() bool {
 
-	// url := "https://crisp-kangaroo-modern.ngrok-free.app/app/LocationTest"
-	url := "localhost/app/LocationTest"
+	url := "https://crisp-kangaroo-modern.ngrok-free.app/app/LocationTest"
+	// url := "localhost:8080/app/LocationTest"
+	cmd := exec.Command("curl", url)
+	output, err := cmd.Output()
+	if err != nil {
+		return false
+	}
+	l.Println(string(output))
+	return true
 	resp, err := http.Get(url)
 	if err != nil {
 		l.Println("Location Test Result: Local, URL not reachable")
