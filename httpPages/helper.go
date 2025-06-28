@@ -5,9 +5,10 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/Lars5Janssen/its-pw/internal/repository"
@@ -24,8 +25,9 @@ var (
 	l        log.Logger
 
 	// DB
-	ctx  context.Context
-	conn *pgx.Conn
+	ctx      context.Context
+	conn     *pgx.Conn
+	globalID string
 )
 
 // FOR DB
@@ -48,14 +50,38 @@ func GetUser(username string) PasskeyUser {
 	return u
 }
 
+func LocationTest(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, globalID)
+	return
+}
+
+func locationTest() bool {
+
+	url := "crisp-kangaroo-modern.ngrok-free.app/app/LocationTest"
+	resp, err := http.Get(url)
+	if err != nil {
+		l.Println("Location Test Result: Local, URL not reachable")
+		return false
+	}
+	defer resp.Body.Close()
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		l.Println("Location Test Result: Local, Body Error:", err.Error())
+		return false
+	}
+	l.Println("Location Test DATA: ", string(data))
+	return false
+}
+
 func InitPasskeys(logger log.Logger, context context.Context, connection *pgx.Conn) {
 	ctx = context
 	conn = connection
+	globalID = uuid.NewString()
 
 	l = logger
 	rpid := "localhost"
-	if os.Getenv("APP_IS_IN_DOCER_CONTAINER") == "true" {
-		rpid := "crisp-kangaroo-modern.ngrok-free.app"
+	if locationTest() {
+		rpid = "crisp-kangaroo-modern.ngrok-free.app"
 	}
 	wconfig := &webauthn.Config{
 		RPDisplayName: "ITS123",

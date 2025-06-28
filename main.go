@@ -32,6 +32,7 @@ func main() {
 
 	// HTTP Server
 	// http.HandleFunc("GET /app/", pages.LandingPage)
+	http.HandleFunc("GET /app/LocationTest", pages.LocationTest)
 	http.HandleFunc("POST /app/login", pages.Login)
 	http.HandleFunc("GET /app/login", pages.LandingPage)
 	http.HandleFunc("GET /app/welcome", pages.WelcomePage)

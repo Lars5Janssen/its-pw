@@ -1,4 +1,4 @@
-package passkey
+package pages
 
 import "github.com/go-webauthn/webauthn/webauthn"
 
