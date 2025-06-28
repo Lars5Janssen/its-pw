@@ -11,6 +11,7 @@ import (
 	"github.com/pquerna/otp/totp"
 
 	"github.com/Lars5Janssen/its-pw/internal/repository"
+	"github.com/Lars5Janssen/its-pw/util"
 )
 
 var (
@@ -42,15 +43,19 @@ func hashMe(toHash string) string {
 
 func AddSession(uuid string, username string, expiresAt time.Time) {
 	repo := repository.New(conn)
-	repo.CreatePwUserSession(ctx, repository.CreatePwUserSessionParams{
+	err := repo.CreatePwUserSession(ctx, repository.CreatePwUserSessionParams{
 		Uuid:      uuid,
 		Username:  username,
 		ExpiresAt: expiresAt,
 	})
+	util.EasyCheck(err, "ERROR in adding session.\nERROR:", err.Error(),
+		"\n\nDETAILS:\n",
+		"uuid:", uuid,
+		"\nusername:", username,
+		"\nExpires:", expiresAt.String())
 }
 
 func CheckLogin(username string, password string, totpCode string) bool {
-
 	repo := repository.New(conn)
 	user, err := repo.GetPwUserByName(ctx, username)
 
@@ -80,30 +85,41 @@ func CheckLogin(username string, password string, totpCode string) bool {
 func AddDefaultUser() {
 	repo := repository.New(conn)
 	err := repo.DeletePwUserByName(ctx, "default")
-	AddUser("default", "default")
-	if err != nil {
-		l.Println("ERROR in def user: ", err.Error())
+	if !AddUser("default", "default") {
+		l.Println("ERROR in add def user, error in adduser()")
 	}
+	util.EasyCheck(err, "ERROR in def user: ", err.Error())
 	totpSecret := "QACZSSNENVAXRPMVJWCY2NL6RT34W2HP"
-	repo.UpdatePwUsertotpByName(ctx, repository.UpdatePwUsertotpByNameParams{
+	err = repo.UpdatePwUsertotpByName(ctx, repository.UpdatePwUsertotpByNameParams{
 		Username:   "default",
 		TotpSecret: []byte(totpSecret),
 	})
+	util.EasyCheck(err, "ERROR in updateing default user totp:", err.Error())
+	l.Println("Added Default user")
 }
 
-func AddUser(username string, password string) {
+func AddUser(username string, password string) bool {
 	repo := repository.New(conn)
+	userExsists, err := repo.GetPwUserByName(ctx, username)
+	if err != nil {
+		l.Println("ERROR in Add User, User Exsists", err.Error())
+	}
+	if userExsists.Username == username {
+		l.Println("USER ALLREADY REGISTERED")
+		return false
+	}
 	hash := hashMe(password)
 	empty := ""
-	err := repo.AddPwUser(ctx, repository.AddPwUserParams{
+	err = repo.AddPwUser(ctx, repository.AddPwUserParams{
 		Username:   username,
 		Pw:         []byte(hash),
 		TotpSecret: []byte(empty),
 	})
 	if err != nil {
 		l.Println("ERROR in adding user: ", username, "\n", err.Error())
+		return false
 	}
-	l.Println("Added Default user")
+	return true
 }
 
 func GenerateTOTP(username string) {
@@ -119,12 +135,13 @@ func GenerateTOTP(username string) {
 
 	repo := repository.New(conn)
 	secret := key.Secret()
-	repo.UpdatePwUsertotpByName(ctx, repository.UpdatePwUsertotpByNameParams{
+	err := repo.UpdatePwUsertotpByName(ctx, repository.UpdatePwUsertotpByNameParams{
 		Username:   username,
 		TotpSecret: []byte(secret),
 	})
+	util.EasyCheck(err, "ERROR in Updating user totp:", err.Error())
 	// util.JSONResponse(w, secret, http.StatusOK)
-	l.Println("TOTP SECRET FOR USER: ", username, "\nTOTP SECRET:",key.Secret())
+	l.Println("TOTP SECRET FOR USER: ", username, "\nTOTP SECRET:", key.Secret())
 }
 
 func CheckSessionToken(w http.ResponseWriter, r *http.Request) (bool, int, Session, string) {
@@ -140,7 +157,8 @@ func CheckSessionToken(w http.ResponseWriter, r *http.Request) (bool, int, Sessi
 	}
 	sessionToken := c.Value
 	repo := repository.New(conn)
-	sessions, _ := repo.GetPwUserSessionByUuid(ctx, sessionToken)
+	sessions, err := repo.GetPwUserSessionByUuid(ctx, sessionToken)
+	util.EasyCheck(err, "ERROR in CheckSessionToken:", err.Error())
 	if len(sessions) == 0 {
 		w.WriteHeader(http.StatusUnauthorized)
 		return false, http.StatusUnauthorized, Session{}, ""
@@ -155,7 +173,8 @@ func CheckSessionToken(w http.ResponseWriter, r *http.Request) (bool, int, Sessi
 
 	if session.isExpired() {
 		l.Println("Session is expired")
-		repo.DeletePwUserSessionByUuid(ctx, sessions[0].Uuid)
+		err := repo.DeletePwUserSessionByUuid(ctx, sessions[0].Uuid)
+		util.Check(err)
 		w.WriteHeader(http.StatusUnauthorized)
 		return false, http.StatusUnauthorized, Session{}, ""
 	}

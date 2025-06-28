@@ -10,6 +10,7 @@ import (
 
 	"github.com/Lars5Janssen/its-pw/httpPages"
 	"github.com/Lars5Janssen/its-pw/login"
+	"github.com/Lars5Janssen/its-pw/util"
 )
 
 var l log.Logger
@@ -45,6 +46,7 @@ func main() {
 	// 	files.WriteYAML("cred.yaml", make(map[string]string))
 	// }
 	login.InitLogin(l, ctx, conn)
+	util.Init(l)
 	pages.InitPasskeys(l, ctx, conn)
 	login.AddDefaultUser()
 

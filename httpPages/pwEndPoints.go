@@ -36,7 +36,11 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("password")
 	l.Printf("SignUp Endpoint was accsessed for %s with pw:\"%s\"\n", username, password)
 
-	login.AddUser(username, password)
+	userAddSuccsess := login.AddUser(username, password)
+	if !userAddSuccsess {
+		l.Println("ERROR in SignUp, error in AddUser()")
+		return
+	}
 	login.GenerateTOTP(username)
 
 	l.Printf("New Login for %s registered\n", username)

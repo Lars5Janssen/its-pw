@@ -12,6 +12,7 @@ import (
 	"github.com/Lars5Janssen/its-pw/internal/repository"
 	"github.com/Lars5Janssen/its-pw/login"
 	"github.com/Lars5Janssen/its-pw/passkey"
+	"github.com/Lars5Janssen/its-pw/util"
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -30,7 +31,8 @@ var (
 // FOR DB
 func GetUser(username string) passkey.PasskeyUser {
 	repo := repository.New(conn)
-	user, _ := repo.GetUserByName(ctx, username)
+	user, err := repo.GetUserByName(ctx, username)
+	util.EasyCheck(err, "ERROR in GetUser util while getting user by name:", err.Error())
 
 	u := &passkey.User{
 		ID:          user.ID,
