@@ -23,6 +23,7 @@ func WelcomePage(w http.ResponseWriter, r *http.Request) {
 }
 
 func LandingPage(w http.ResponseWriter, r *http.Request) {
+	initRPID()
 	l.Println("LoginPage was accsessed")
 
 	html, err := os.ReadFile("templates/landing.html")

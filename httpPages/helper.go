@@ -31,6 +31,42 @@ var (
 	rpidInit bool
 )
 
+func InitPasskeys(logger log.Logger, context context.Context, connection *pgx.Conn) {
+	ctx = context
+	conn = connection
+	globalID = uuid.NewString()
+	l = logger
+	rpidInit = false
+}
+
+func initRPID() {
+	if rpidInit {
+		l.Println("RPID init")
+		return}
+	rpidInit = true
+	rpid := "localhost"
+	if locationTest() {
+		rpid = "crisp-kangaroo-modern.ngrok-free.app"
+	}
+	wconfig := &webauthn.Config{
+		RPDisplayName: "ITS123",
+		RPID:          rpid,
+		RPOrigins: []string{
+			"https://crisp-kangaroo-modern.ngrok-free.app",
+			"localhost",
+			"https://localhost",
+			"http://localhost:8080",
+			"http://localhost:8765",
+			"https://localhost:8080",
+			"localhost:8080",
+		},
+	}
+
+	if webAuthn, err = webauthn.New(wconfig); err != nil {
+		log.Fatalln(err)
+	}
+}
+
 // FOR DB
 func GetUser(username string) PasskeyUser {
 	repo := repository.New(conn)
@@ -83,40 +119,6 @@ func locationTest() bool {
 	l.Println("Location Test Data: ", string(curlUUID), "\ngloablID: ", globalID)
 	l.Println("Location Test Result: Local")
 	return false
-}
-
-func InitPasskeys(logger log.Logger, context context.Context, connection *pgx.Conn) {
-	ctx = context
-	conn = connection
-	globalID = uuid.NewString()
-	l = logger
-	rpidInit = false
-}
-
-func initRPID() {
-	if rpidInit {return}
-	rpidInit = true
-	rpid := "localhost"
-	if locationTest() {
-		rpid = "crisp-kangaroo-modern.ngrok-free.app"
-	}
-	wconfig := &webauthn.Config{
-		RPDisplayName: "ITS123",
-		RPID:          rpid,
-		RPOrigins: []string{
-			"https://crisp-kangaroo-modern.ngrok-free.app",
-			"localhost",
-			"https://localhost",
-			"http://localhost:8080",
-			"http://localhost:8765",
-			"https://localhost:8080",
-			"localhost:8080",
-		},
-	}
-
-	if webAuthn, err = webauthn.New(wconfig); err != nil {
-		log.Fatalln(err)
-	}
 }
 
 func setLoginSessionToken(w http.ResponseWriter, username string) {
