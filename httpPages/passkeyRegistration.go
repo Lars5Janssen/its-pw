@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/Lars5Janssen/its-pw/internal/repository"
+	"github.com/Lars5Janssen/its-pw/util"
 )
 
 func BeginRegistration(w http.ResponseWriter, r *http.Request) {
@@ -34,7 +35,7 @@ func BeginRegistration(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		msg := fmt.Sprintf("can't begin registration: %s", err.Error())
 		l.Printf("ERROR %s", msg)
-		JSONResponse(w, msg, http.StatusBadRequest)
+		util.JSONResponse(w, msg, http.StatusBadRequest)
 		return
 	}
 
@@ -62,7 +63,7 @@ func BeginRegistration(w http.ResponseWriter, r *http.Request) {
 		Value: username,
 	})
 
-	JSONResponse(w, options, http.StatusOK)
+	util.JSONResponse(w, options, http.StatusOK)
 }
 
 func EndRegistration(w http.ResponseWriter, r *http.Request) {
@@ -92,7 +93,7 @@ func EndRegistration(w http.ResponseWriter, r *http.Request) {
 			Name:  "sid",
 			Value: "",
 		})
-		JSONResponse(w, msg, http.StatusBadRequest)
+		util.JSONResponse(w, msg, http.StatusBadRequest)
 		return
 	}
 
@@ -109,5 +110,5 @@ func EndRegistration(w http.ResponseWriter, r *http.Request) {
 	})
 
 	l.Printf("INFO passkey reg finished")
-	JSONResponse(w, "Reg Succsess", http.StatusOK)
+	util.JSONResponse(w, "Reg Succsess", http.StatusOK)
 }

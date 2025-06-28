@@ -1,19 +1,31 @@
 package login
 
 import (
+	"context"
 	"crypto/sha256"
 	"fmt"
 	"log"
 	"net/http"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/pquerna/otp/totp"
 
-	"github.com/Lars5Janssen/its-pw/files"
+	// "github.com/Lars5Janssen/its-pw/files"
+	"github.com/Lars5Janssen/its-pw/internal/repository"
 )
 
-var sessions = map[string]Session{}
-var totpmap = map[string]string{}
+var (
+	l    log.Logger
+	ctx  context.Context
+	conn *pgx.Conn
+)
+
+func InitLogin(log log.Logger, conntext context.Context, connection *pgx.Conn) {
+	l = log
+	ctx = conntext
+	conn = connection
+}
 
 type Session struct {
 	username string
@@ -24,15 +36,15 @@ func (s Session) isExpired() bool {
 	return s.expiry.Before(time.Now())
 }
 
-func ReadCreds() map[string]string {
-	fmt.Println("Reading Credentials")
-	return files.ReadYaml("creds.yaml")
-}
-
-func WriteCreds(creds map[string]string) {
-	fmt.Println("Writing Credentials")
-	files.WriteYAML("creds.yaml", creds)
-}
+// func ReadCreds() map[string]string {
+// 	fmt.Println("Reading Credentials")
+// 	return files.ReadYaml("creds.yaml")
+// }
+//
+// func WriteCreds(creds map[string]string) {
+// 	fmt.Println("Writing Credentials")
+// 	files.WriteYAML("creds.yaml", creds)
+// }
 
 func hashMe(toHash string) string {
 	h := sha256.New()
@@ -41,28 +53,31 @@ func hashMe(toHash string) string {
 }
 
 func AddSession(uuid string, username string, expiresAt time.Time) {
-	sessions[uuid] = Session{
-		username: username,
-		expiry:   expiresAt,
-	}
+	repo := repository.New(conn)
+	repo.CreatePwUserSession(ctx, repository.CreatePwUserSessionParams{
+		Uuid:      uuid,
+		Username:  username,
+		ExpiresAt: expiresAt,
+	})
 }
 
 func CheckLogin(username string, password string, totpCode string) bool {
 
-	creds := ReadCreds()
+	repo:=repository.New(conn)
+	user, err := repo.GetPwUserByName(ctx, username)
+	if err != nil {
+		return false
+	}
 
-	found_password, user_exists := creds[username]
-	if !user_exists {
+	if *user.Pw != hashMe(password) {
 		return false
 	}
-	if found_password != hashMe(password) {
+
+	if user.TotpSecret == nil || *user.TotpSecret == "" {
 		return false
 	}
-	userSecret, exists := totpmap[username]
-	if !exists {
-		return false
-	}
-	if totp.Validate(totpCode, userSecret) {
+
+	if totp.Validate(totpCode, *user.TotpSecret) {
 		return true
 	}
 	return false
@@ -70,13 +85,21 @@ func CheckLogin(username string, password string, totpCode string) bool {
 
 func AddDefaultUser() {
 	AddUser("default", "default")
-	totpmap["default"] = "QACZSSNENVAXRPMVJWCY2NL6RT34W2HP"
+	repo := repository.New(conn)
+	totpSecret := "QACZSSNENVAXRPMVJWCY2NL6RT34W2HP"
+	repo.UpdatePwUsertotpByName(ctx, repository.UpdatePwUsertotpByNameParams{
+		Username:   "default",
+		TotpSecret: &totpSecret,
+	})
 }
 
 func AddUser(username string, password string) {
-	creds := ReadCreds()
-	creds[username] = hashMe(password)
-	WriteCreds(creds)
+	repo := repository.New(conn)
+	hash := hashMe(password)
+	repo.AddPwUser(ctx, repository.AddPwUserParams{
+		Username: username,
+		Pw:       &hash,
+	})
 }
 
 func GenerateTOTP(username string) {
@@ -90,7 +113,13 @@ func GenerateTOTP(username string) {
 		log.Fatal("Something has gone wrong during otp generation")
 	}
 
-	totpmap[username] = key.Secret()
+	repo := repository.New(conn)
+	secret := key.Secret()
+	repo.UpdatePwUsertotpByName(ctx, repository.UpdatePwUsertotpByNameParams{
+		Username:   username,
+		TotpSecret: &secret,
+	})
+	// util.JSONResponse(w, secret, http.StatusOK)
 	fmt.Println(key.Secret())
 }
 
@@ -106,16 +135,25 @@ func CheckSessionToken(w http.ResponseWriter, r *http.Request) (bool, int, Sessi
 		return false, http.StatusBadRequest, Session{}, ""
 	}
 	sessionToken := c.Value
-	userSession, exists := sessions[sessionToken]
-	if !exists {
+	repo := repository.New(conn)
+	sessions, _ := repo.GetPwUserSessionByUuid(ctx, sessionToken)
+	if len(sessions) == 0 {
 		w.WriteHeader(http.StatusUnauthorized)
 		return false, http.StatusUnauthorized, Session{}, ""
+	} else if len(sessions) != 1 {
+		w.WriteHeader(http.StatusInternalServerError)
+		return false, http.StatusInternalServerError, Session{}, ""
 	}
-	if userSession.isExpired() {
-		delete(sessions, sessionToken)
+	session := Session{
+		username: sessions[0].Username,
+		expiry:   sessions[0].ExpiresAt,
+	}
+
+	if session.isExpired() {
+		repo.DeletePwUserSessionByUuid(ctx, sessions[0].Uuid)
 		w.WriteHeader(http.StatusUnauthorized)
 		return false, http.StatusUnauthorized, Session{}, ""
 	}
 
-	return true, http.StatusOK, userSession, userSession.username
+	return true, http.StatusOK, session, session.username
 }

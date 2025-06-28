@@ -7,7 +7,40 @@ package repository
 
 import (
 	"context"
+	"time"
 )
+
+const addPwUser = `-- name: AddPwUser :exec
+INSERT INTO pwusers (username, pw, totp_secret)
+VALUES ($1, $2, $3)
+`
+
+type AddPwUserParams struct {
+	Username   string
+	Pw         *string
+	TotpSecret *string
+}
+
+func (q *Queries) AddPwUser(ctx context.Context, arg AddPwUserParams) error {
+	_, err := q.db.Exec(ctx, addPwUser, arg.Username, arg.Pw, arg.TotpSecret)
+	return err
+}
+
+const createPwUserSession = `-- name: CreatePwUserSession :exec
+INSERT INTO pwsessions (username, uuid, expires_at)
+VALUES ($1, $2, $3)
+`
+
+type CreatePwUserSessionParams struct {
+	Username  string
+	Uuid      string
+	ExpiresAt time.Time
+}
+
+func (q *Queries) CreatePwUserSession(ctx context.Context, arg CreatePwUserSessionParams) error {
+	_, err := q.db.Exec(ctx, createPwUserSession, arg.Username, arg.Uuid, arg.ExpiresAt)
+	return err
+}
 
 const createSession = `-- name: CreateSession :exec
 INSERT INTO sessions (user_id, session_id, session_data)
@@ -47,6 +80,16 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
 	return err
 }
 
+const deletePwUserSessionByUuid = `-- name: DeletePwUserSessionByUuid :exec
+DELETE FROM pwsessions
+WHERE uuid = $1
+`
+
+func (q *Queries) DeletePwUserSessionByUuid(ctx context.Context, uuid string) error {
+	_, err := q.db.Exec(ctx, deletePwUserSessionByUuid, uuid)
+	return err
+}
+
 const deleteSessionByUserId = `-- name: DeleteSessionByUserId :exec
 DELETE FROM sessions
 WHERE user_id = $1
@@ -76,6 +119,57 @@ func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
 			&i.Name,
 			&i.Credentials,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getPwUserByName = `-- name: GetPwUserByName :one
+SELECT username, pw, totp_secret FROM pwusers
+WHERE username = $1
+LIMIT 1
+`
+
+func (q *Queries) GetPwUserByName(ctx context.Context, username string) (Pwuser, error) {
+	row := q.db.QueryRow(ctx, getPwUserByName, username)
+	var i Pwuser
+	err := row.Scan(&i.Username, &i.Pw, &i.TotpSecret)
+	return i, err
+}
+
+const getPwUserSessionByName = `-- name: GetPwUserSessionByName :one
+SELECT username, uuid, expires_at FROM pwsessions
+WHERE username = $1
+LIMIT 1
+`
+
+func (q *Queries) GetPwUserSessionByName(ctx context.Context, username string) (Pwsession, error) {
+	row := q.db.QueryRow(ctx, getPwUserSessionByName, username)
+	var i Pwsession
+	err := row.Scan(&i.Username, &i.Uuid, &i.ExpiresAt)
+	return i, err
+}
+
+const getPwUserSessionByUuid = `-- name: GetPwUserSessionByUuid :many
+SELECT username, uuid, expires_at FROM pwsessions
+WHERE uuid = $1
+`
+
+func (q *Queries) GetPwUserSessionByUuid(ctx context.Context, uuid string) ([]Pwsession, error) {
+	rows, err := q.db.Query(ctx, getPwUserSessionByUuid, uuid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Pwsession
+	for rows.Next() {
+		var i Pwsession
+		if err := rows.Scan(&i.Username, &i.Uuid, &i.ExpiresAt); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -128,6 +222,38 @@ func (q *Queries) GetUserByName(ctx context.Context, name string) (User, error) 
 		&i.Credentials,
 	)
 	return i, err
+}
+
+const updatePwUserPwByName = `-- name: UpdatePwUserPwByName :exec
+UPDATE pwusers
+SET pw = $2
+WHERE username = $1
+`
+
+type UpdatePwUserPwByNameParams struct {
+	Username string
+	Pw       *string
+}
+
+func (q *Queries) UpdatePwUserPwByName(ctx context.Context, arg UpdatePwUserPwByNameParams) error {
+	_, err := q.db.Exec(ctx, updatePwUserPwByName, arg.Username, arg.Pw)
+	return err
+}
+
+const updatePwUsertotpByName = `-- name: UpdatePwUsertotpByName :exec
+UPDATE pwusers
+SET totp_secret = $2
+WHERE username = $1
+`
+
+type UpdatePwUsertotpByNameParams struct {
+	Username   string
+	TotpSecret *string
+}
+
+func (q *Queries) UpdatePwUsertotpByName(ctx context.Context, arg UpdatePwUsertotpByNameParams) error {
+	_, err := q.db.Exec(ctx, updatePwUsertotpByName, arg.Username, arg.TotpSecret)
+	return err
 }
 
 const updateUserCredentials = `-- name: UpdateUserCredentials :exec

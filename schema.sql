@@ -1,7 +1,14 @@
 CREATE TABLE IF NOT EXISTS pwusers (
     username TEXT PRIMARY KEY,
     pw TEXT,
-)
+    totp_secret TEXT
+);
+
+CREATE TABLE IF NOT EXISTS pwsessions (
+    username TEXT PRIMARY KEY REFERENCES pwusers(username) ON DELETE CASCADE,
+    uuid TEXT NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL
+);
 
 CREATE TABLE IF NOT EXISTS users (
     id BYTEA PRIMARY KEY,

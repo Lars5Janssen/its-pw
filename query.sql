@@ -1,3 +1,39 @@
+-- name: GetPwUserByName :one
+SELECT * FROM pwusers
+WHERE username = $1
+LIMIT 1;
+
+-- name: AddPwUser :exec
+INSERT INTO pwusers (username, pw, totp_secret)
+VALUES ($1, $2, $3);
+
+-- name: UpdatePwUserPwByName :exec
+UPDATE pwusers
+SET pw = $2
+WHERE username = $1;
+
+-- name: UpdatePwUsertotpByName :exec
+UPDATE pwusers
+SET totp_secret = $2
+WHERE username = $1;
+
+-- name: GetPwUserSessionByName :one
+SELECT * FROM pwsessions
+WHERE username = $1
+LIMIT 1;
+
+-- name: GetPwUserSessionByUuid :many
+SELECT * FROM pwsessions
+WHERE uuid = $1;
+
+-- name: DeletePwUserSessionByUuid :exec
+DELETE FROM pwsessions
+WHERE uuid = $1;
+
+-- name: CreatePwUserSession :exec
+INSERT INTO pwsessions (username, uuid, expires_at)
+VALUES ($1, $2, $3);
+
 -- name: GetAllUsers :many
 SELECT * FROM users;
 

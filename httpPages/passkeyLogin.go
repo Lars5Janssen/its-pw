@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/Lars5Janssen/its-pw/internal/repository"
+	"github.com/Lars5Janssen/its-pw/util"
 	"github.com/go-webauthn/webauthn/webauthn"
 )
 
@@ -23,7 +24,7 @@ func BeginLogin(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		msg := fmt.Sprintf("can't begin login: %s", err.Error())
 		l.Printf("ERROR %s", msg)
-		JSONResponse(w, msg, http.StatusBadRequest)
+		util.JSONResponse(w, msg, http.StatusBadRequest)
 
 		return
 	}
@@ -60,7 +61,7 @@ func BeginLogin(w http.ResponseWriter, r *http.Request) {
 		Value: username,
 	})
 
-	JSONResponse(w, options, http.StatusOK)
+	util.JSONResponse(w, options, http.StatusOK)
 }
 
 func EndLogin(w http.ResponseWriter, r *http.Request) {
@@ -106,7 +107,7 @@ func EndLogin(w http.ResponseWriter, r *http.Request) {
 	setLoginSessionToken(w, user.Name)
 
 	fmt.Printf("User %s logged in\n", user.Name)
-	JSONResponse(w, "LOGIN Success", http.StatusOK)
+	util.JSONResponse(w, "LOGIN Success", http.StatusOK)
 	// http.Redirect(w, r, "/app/welcome", http.StatusSeeOther)
 	return
 }

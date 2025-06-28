@@ -4,6 +4,22 @@
 
 package repository
 
+import (
+	"time"
+)
+
+type Pwsession struct {
+	Username  string
+	Uuid      string
+	ExpiresAt time.Time
+}
+
+type Pwuser struct {
+	Username   string
+	Pw         *string
+	TotpSecret *string
+}
+
 type Session struct {
 	UserID      []byte
 	SessionID   string
