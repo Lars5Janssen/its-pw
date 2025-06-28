@@ -59,7 +59,8 @@ func LocationTest(w http.ResponseWriter, r *http.Request) {
 func locationTest() bool {
 
 	location := os.Getenv("IS_IN_DOCKER")
-	if location == "" {
+	l.Println(location)
+	if location != "true" {
 		l.Println("Location Test Result: Local: Not in Docker Compose")
 		return false
 	} 
