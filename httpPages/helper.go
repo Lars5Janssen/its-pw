@@ -66,7 +66,7 @@ func locationTest() bool {
 	if err != nil {
 		return false
 	}
-	l.Println(string(output))
+	l.Println("Location Test Data: ", string(output), "\ngloablID: ", globalID)
 	return true
 	resp, err := http.Get(url)
 	if err != nil {
