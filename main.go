@@ -37,11 +37,11 @@ func main() {
 	http.HandleFunc("GET /app/welcome", pages.WelcomePage)
 	http.HandleFunc("POST /app/signup", pages.SignUp)
 
-	http.HandleFunc("/app/beginRegistration", pages.BeginRegistration)
-	http.HandleFunc("/app/endRegistration", pages.EndRegistration)
-	http.HandleFunc("/app/beginLogin", pages.BeginLogin)
-	http.HandleFunc("/app/endLogin", pages.EndLogin)
-	http.HandleFunc("/app/proceed", pages.WelcomePage)
+	http.HandleFunc("POST /app/beginRegistration", pages.BeginRegistration)
+	http.HandleFunc("POST /app/endRegistration", pages.EndRegistration)
+	http.HandleFunc("POST /app/beginLogin", pages.BeginLogin)
+	http.HandleFunc("POST /app/endLogin", pages.EndLogin)
+	http.HandleFunc("POST /app/proceed", pages.WelcomePage)
 
 	if _, err := os.Stat("creds.yaml"); err != nil {
 		files.WriteYAML("cred.yaml", make(map[string]string))
