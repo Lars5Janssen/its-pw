@@ -32,21 +32,27 @@ func main() {
 	defer conn.Close(ctx)
 
 	// HTTP Server
-	// http.HandleFunc("GET /app/", pages.LandingPage)
-	http.HandleFunc("GET /app/LocationTest", pages.LocationTest)
-	http.HandleFunc("POST /app/login", pages.Login)
+	// Redirects
 	http.HandleFunc("POST /app/login/proceed", pages.LandingPageRedirect)
 	http.HandleFunc("POST /app/proceed", pages.LandingPageRedirect)
 	http.HandleFunc("POST /app/", pages.LandingPageRedirect)
+	// http.HandleFunc("POST /app/proceed", pages.LandingPageRedirect)
+
+	http.HandleFunc("GET /app/LocationTest", pages.LocationTest)
+
+	// Actual Pages
 	http.HandleFunc("GET /app/login", pages.LandingPage)
 	http.HandleFunc("GET /app/welcome", pages.WelcomePage)
+
+	// Password login endpoints
+	http.HandleFunc("POST /app/login", pages.Login)
 	http.HandleFunc("POST /app/signup", pages.SignUp)
 
+	// Passkey Login endpoints
 	http.HandleFunc("POST /app/beginRegistration", pages.BeginRegistration)
 	http.HandleFunc("POST /app/endRegistration", pages.EndRegistration)
 	http.HandleFunc("POST /app/beginLogin", pages.BeginLogin)
 	http.HandleFunc("POST /app/endLogin", pages.EndLogin)
-	http.HandleFunc("POST /app/proceed", pages.WelcomePage)
 
 	login.InitLogin(l, ctx, conn)
 	pages.InitPasskeys(l, ctx, conn)
