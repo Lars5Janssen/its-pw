@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS pwusers (
 );
 
 CREATE TABLE IF NOT EXISTS pwsessions (
-    username TEXT PRIMARY KEY REFERENCES pwusers(username) ON DELETE CASCADE,
+    username TEXT PRIMARY KEY,
     uuid TEXT NOT NULL,
     expires_at TIMESTAMPTZ NOT NULL
 );
