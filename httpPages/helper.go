@@ -55,6 +55,7 @@ func initRPID() {
 			"https://crisp-kangaroo-modern.ngrok-free.app",
 			"localhost",
 			"https://localhost",
+			"http://localhost",
 			"http://localhost:8080",
 			"http://localhost:8765",
 			"https://localhost:8080",
