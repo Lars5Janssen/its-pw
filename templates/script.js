@@ -1,3 +1,9 @@
+function showMessage(message, isError = false) {
+    const messageElement = document.getElementById('message');
+    messageElement.textContent = message;
+    messageElement.style.Color = isError ? 'red' : 'green';
+}
+
 document.getElementById('loginButton').addEventListener('click', login);
 async function login() {
     const username = document.getElementById('pk-username').value;
