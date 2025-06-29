@@ -25,7 +25,7 @@ async function implLogin() {
         var crpytNounceMe = encrypt(nounceMe, sharedSecret);
         console.log("NOUNCE");
         console.log(crpytNounceMe);
-        const response = await fetch('app/impl/sendLogin', {
+        const response = await fetch('/app/impl/sendLogin', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username: username, encryptedData: crpytNounceMe})
         });
@@ -34,6 +34,7 @@ async function implLogin() {
             throw new Error('Failed to get login options from server: ' + msg);
         }
         const resposeData = await response.json();
+        console.log("RESPONSE")
         console.log(resposeData)
 
     } catch (error) {
@@ -43,6 +44,7 @@ async function implLogin() {
 }
 
 function encrypt(plaintext, secret) {
+    return plaintext;
     var key = CryptoJS.enc.Utf8.parse(secret);
     let iv = CryptoJS.lib.WordArray.create(key.words.slice(0,4));
     console.log("IV: " + CryptoJS.enc.Base64.stringify(iv));
@@ -57,6 +59,7 @@ function encrypt(plaintext, secret) {
 }
 
 function decrypt(ciperText, secret, iv) {
+    return ciperText;
     // IV is base64
     let iv1 = CryptoJS.enc.Base64.parse(iv);
 
