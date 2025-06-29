@@ -8,6 +8,14 @@ import (
 	"time"
 )
 
+type Implsession struct {
+	Sid          string
+	Username     *string
+	ClientNounce string
+	OwnNounce    string
+	SessionKey   []byte
+}
+
 type Pwsession struct {
 	Username  string
 	Uuid      string

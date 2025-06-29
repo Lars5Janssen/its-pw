@@ -27,7 +27,7 @@ async function implLogin() {
         console.log(crpytNounceMe);
         const response = await fetch('/app/impl/sendLogin', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: username, encryptedData: crpytNounceMe})
+            body: JSON.stringify({ username: username, encryptedData: crpytNounceMe })
         });
         if (!response.ok) {
             const msg = await response.json();
@@ -42,21 +42,40 @@ async function implLogin() {
         showMessage('Error: ' + error.message, true);
     }
 }
+var CryptoJS = require("crypto-js");
 
-function encrypt(plaintext, secret) {
-    return plaintext;
+function encrypt(plainText, secret) {
     var key = CryptoJS.enc.Utf8.parse(secret);
-    let iv = CryptoJS.lib.WordArray.create(key.words.slice(0,4));
-    console.log("IV: " + CryptoJS.enc.Base64.stringify(iv));
+    let ivv = CryptoJS.lib.WordArray.create(key.words.slice(0, 4));
+    console.log(key.words.length);
+    console.log("IV : " + CryptoJS.enc.Base64.stringify(ivv));
 
-    // Encrypt
-    var cipherText = CryptoJS.AES.encrypt(plaintext, key, {
-        iv: iv,
-        mode: CryptoJS.mode.CBC,
-        padding: CryptoJS.pad.Pkcs7
-    });
+    // Encrypt the plaintext
+    var cipherText = CryptoJS.AES.encrypt(
+        plainText,
+        CryptoJS.enc.Hex.parse(secret),
+        {
+            iv: ivv,
+            mode: CryptoJS.mode.CBC,
+            padding: CryptoJS.pad.Pkcs7
+        });
     return cipherText.toString();
 }
+//     console.log("CRYPTO")
+//     var key = CryptoJS.enc.Utf8.parse(secret);
+//     let iv = CryptoJS.lib.WordArray.create(key.words.slice(0,4));
+//     console.log("IV: " + CryptoJS.enc.Base64.stringify(iv));
+//
+//     // Encrypt
+//     console.log("CRYPTO MIDDLE")
+//     var cipherText = CryptoJS.AES.encrypt(plaintext, key, {
+//         iv: iv,
+//         mode: CryptoJS.mode.CBC,
+//         padding: CryptoJS.pad.Pkcs7
+//     });
+//     console.log("CRYPTO ENDE")
+//     return cipherText.toString();
+// }
 
 function decrypt(ciperText, secret, iv) {
     return ciperText;
@@ -66,7 +85,7 @@ function decrypt(ciperText, secret, iv) {
     var key = CryptoJS.enc.Utf8.parse(secret);
     var cipherBytes = CryptoJS.enc.Base64.parse(ciperText);
 
-    var decripted = CryptoJS.AES.decrypt({ciphertext: cipherBytes}, key, {
+    var decripted = CryptoJS.AES.decrypt({ ciphertext: cipherBytes }, key, {
         iv: iv1,
         mode: CryptoJS.mode.CBC,
         padding: CryptoJS.pad.Pkcs7

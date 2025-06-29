@@ -1,3 +1,11 @@
+CREATE TABLE IF NOT EXISTS implsessions (
+    sid TEXT PRIMARY KEY,
+    username TEXT,
+    client_nounce TEXT NOT NULL,
+    own_nounce TEXT NOT NULL,
+    session_key BYTEA NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS pwusers (
     username TEXT PRIMARY KEY,
     pw BYTEA,

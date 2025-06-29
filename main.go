@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/Lars5Janssen/its-pw/httpPages"
+	"github.com/Lars5Janssen/its-pw/internal/repository"
 	"github.com/Lars5Janssen/its-pw/login"
 	"github.com/Lars5Janssen/its-pw/util"
 )
@@ -54,10 +55,12 @@ func main() {
 
 	// Impl Login
 	http.HandleFunc("POST /app/impl/sendLogin", pages.SendLogin)
+	http.HandleFunc("POST /app/impl/msg", pages.MSG)
 
 	login.InitLogin(l, ctx, conn)
 	pages.InitPasskeys(l, ctx, conn)
 	login.AddDefaultUser()
+	repository.New(conn).DeleteAllSessions(ctx)
 
 	l.Println("Server started")
 	log.Fatal(http.ListenAndServe(":8080", nil))
