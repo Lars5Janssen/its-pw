@@ -53,7 +53,10 @@ func MSG(w http.ResponseWriter, r *http.Request) {
 		string(sessionKey))
 
 	// construct response
-	responseMSG := "Your message was:\""+decryptedMSG+"\"."
+	username, err := repo.GetImplUserNameFromSID(ctx, msg.Sid)
+	util.EasyCheck(err, "ERROR during get username from sid: ", "err")
+	responseMSG := "Your message was:\""+decryptedMSG+"\"." +
+	"\nand you are: " +  *username
 	encrypted := encrypt(responseMSG, string(sessionKey))
 	
 	resp := message{

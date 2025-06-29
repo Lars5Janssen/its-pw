@@ -65,6 +65,19 @@ func (q *Queries) GetClientNouncebyUserName(ctx context.Context, username *strin
 	return client_nounce, err
 }
 
+const getImplUserNameFromSID = `-- name: GetImplUserNameFromSID :one
+SELECT username FROM implsessions
+WHERE sid = $1
+LIMIT 1
+`
+
+func (q *Queries) GetImplUserNameFromSID(ctx context.Context, sid string) (*string, error) {
+	row := q.db.QueryRow(ctx, getImplUserNameFromSID, sid)
+	var username *string
+	err := row.Scan(&username)
+	return username, err
+}
+
 const getOwnNouncebyUserName = `-- name: GetOwnNouncebyUserName :one
 SELECT own_nounce FROM implsessions
 WHERE username = $1

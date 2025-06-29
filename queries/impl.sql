@@ -10,6 +10,11 @@ LIMIT 1;
 -- name: DeleteAllSessions :exec
 DELETE FROM implsessions;
 
+-- name: GetImplUserNameFromSID :one
+SELECT username FROM implsessions
+WHERE sid = $1
+LIMIT 1;
+
 -- name: GetSIDbyUserName :one
 SELECT sid FROM implsessions
 WHERE username = $1
