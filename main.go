@@ -18,7 +18,6 @@ var l log.Logger
 func main() {
 	// Logging
 	l = *log.Default()
-	l.Println("VERSION LT DEV")
 	util.Init(l)
 
 	// Connect to DB
@@ -52,6 +51,9 @@ func main() {
 	http.HandleFunc("POST /app/endRegistration", pages.EndRegistration)
 	http.HandleFunc("POST /app/beginLogin", pages.BeginLogin)
 	http.HandleFunc("POST /app/endLogin", pages.EndLogin)
+
+	// Impl Login
+	http.HandleFunc("POST /app/impl/sendLogin", pages.SendLogin)
 
 	login.InitLogin(l, ctx, conn)
 	pages.InitPasskeys(l, ctx, conn)
